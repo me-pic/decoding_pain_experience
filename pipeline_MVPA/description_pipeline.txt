@@ -1,0 +1,13 @@
+1)----Manip_data-----
+
+#script qui compute une DM, et une concaténation des volumes cérébraux, et qui la stock dans le dossier du participant
+>retourne deux DM et un fichier nii pour chaque participant
+
+>fait appel aux fonction:
+	>function_DM : fonction qui crée la DM selon les paramètres (data_dir, timestamps_path, DM_name, regresseurs_mvmnt)
+	>funciton_concat_fmri_img : retourne un fichier nii 4D et une liste avec tous les path des volumes nii 3D pour un sujet
+
+2)----import_DM_make_contraste
+
+Script qui fit le GLM selon la DM qu'on lui donne. Computation de la carte d'activation pour chaque shock et qui save cela dans le dossier 
+du participant
