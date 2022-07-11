@@ -45,6 +45,7 @@ def dot(path_to_img, mask_path):
     subj_array = []
     #----------Main loop--------------
 
+    counter = 1
     #For each map/nii file in the provided path
     for maps in data_path:
 
@@ -57,17 +58,18 @@ def dot(path_to_img, mask_path):
 
         #if image is not the same shape as the mask, the image will be resample
         #mask is the original mask to dot product with the provided images
-        if img.shape != mask.shape:
+        #counter is to make sure we only resample the mask once, to save some computing time
+        if img.shape != mask.shape and counter == 1:
 
         #---------Resampling--------
             print('Resampling : ' + os.path.basename(os.path.normpath(maps)))
 
             #resampling img to mask's shape
             from nilearn import image
-            resampled_img = image.resample_to_img(maps,mask)
+            resampled_mask = image.resample_to_img(mask,maps)
 
-            print('image has been resample to shape : {} '.format(resampled_img.shape))
-
+            print('mask has been resample to shape : {} '.format(resampled_mask.shape))
+            print('Did that  {} times '.format(counter))
 
         #---------fitting images to 1 dimension------------
         #making mask and image a vector in order to dot product
@@ -77,10 +79,10 @@ def dot(path_to_img, mask_path):
         masker_all = NiftiMasker(mask_strategy="whole-brain-template")
 
         #masker of the initial mask provided, in our case the mask is called NPS
-        masker_NPS = masker_all.fit_transform(mask)
+        masker_NPS = masker_all.fit_transform(img)
 
         #fitting temporary masker for ongoing beta map :'maps'
-        masker_tmp = masker_all.fit_transform(resampled_img)
+        masker_tmp = masker_all.fit_transform(resampled_mask)
 
         #---------Dot product---------
 
@@ -90,9 +92,9 @@ def dot(path_to_img, mask_path):
         #storing the result in array
         dot_array = np.append(dot_array,dot_res)
 
-        print('Computing dot product')
+        print('Computing dot product with img : ' + subj)
         print('=====================')
-
+        counter += 1
     return dot_array,subj_array
 
 

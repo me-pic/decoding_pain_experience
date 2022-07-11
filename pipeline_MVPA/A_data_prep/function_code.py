@@ -1,34 +1,53 @@
 
-def get_subj_data(data_dir, prefix):
+def get_subj_data(data_dir, prefix = None):
+    """
+    -------------Fonction description----------
 
-    #-------------Fonction description----------
+    Function that takes a directory of file and runs through all the file in it whilst it only list the path of the file starting
+    with the prefix given as argument
 
-    #Function that takes a directory of file and runs through all the file in it whilst it only list the path of the file starting
-    #with the prefix given as argument
+    Example : in a directory you have many nii files, but you only want to use a sub-sample of them, e.g. the ones starting with the prefix swaf*
 
-    #Example : in a directory you have many nii files, but you only want to use a sub-sample of them, e.g. the ones starting with the prefix swaf*
+    -----------------Variables-----------------
+    data_dir: path to a directory containing all files
+    prefix : prefix of the file of interest that you want to list the path
+    if prefix = None, all the files of the dir will be put in the list
 
-    #-----------------Variables-----------------
-    #data_dir: path to a directory containing all files
-    #prefix : prefix of the file of interest that you want to list the path
-
-    #--------------------------------------------
-
+    --------------------------------------------
+    """
     import os
 
-    #Extraction des volumes pour un sujet dans une liste
-    ls_volumes_all = os.listdir(data_dir)
+    #if prefix = None, all the files of the dir will be put in the list
+    if prefix == None:
 
-    #Crée une liste avec seulement les fichiers commencant par sw
-    swaf_list = [x for x in ls_volumes_all if x.startswith(prefix)]
-    #print(swaf_list)
+        #Extraction des volumes pour un sujet dans une liste
+        ls_volumes_all = os.listdir(data_dir)
 
-    #joindre le path avec les noms des volumes dans une liste
-    #--> on se retrouve avec une liste contenant les path de tous nos volumes d'intérêt
-    subject_data = [os.path.join(data_dir, name) for name in swaf_list]
+        #Crée une liste avec seulement les fichiers commencant par sw
+        all_list = [x for x in ls_volumes_all]
+        #print(swaf_list)
+
+        #joindre le path avec les noms des volumes dans une liste
+        #--> on se retrouve avec une liste contenant les path de tous nos volumes d'intérêt
+        subject_data = [os.path.join(data_dir, name) for name in all_list]
 
 
-    return subject_data
+        return subject_data
+
+    if prefix != None:
+        #Extraction des volumes pour un sujet dans une liste
+        ls_volumes_all = os.listdir(data_dir)
+
+        #Crée une liste avec seulement les fichiers commencant par sw
+        swaf_list = [x for x in ls_volumes_all if x.startswith(prefix)]
+        #print(swaf_list)
+
+        #joindre le path avec les noms des volumes dans une liste
+        #--> on se retrouve avec une liste contenant les path de tous nos volumes d'intérêt
+        subject_data = [os.path.join(data_dir, name) for name in swaf_list]
+
+
+        return subject_data
 
 
 
