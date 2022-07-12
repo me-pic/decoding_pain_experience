@@ -10,21 +10,24 @@
 
 
 #put the two imgs into 2D arrays to facilitate dot product
-def dot(path_to_img, mask_path):
+def dot_fmri(path_to_img, mask_path, save = None, path_to_save = None):
 
-
+#---------------------------
 #path_to_img : path to the folder of all the images
 #mask : ath or nifti file of the mask with which the images will be dot product with
+#save : optionnal, if True, saving will occur, else results will only be returned and not saved
+#path_to_save : optional, if mentioned, a csv file with dot result will saved to this path. If None but save = True,
+    #the results will be saved in path_to_save
 
-#return a csv file with one column as the results of the dot products and the second column with the name of
- #   the file/participant
+#return a pandas df with one column as the results of the dot products and the second column with the name of the files used
+#---------------------------
 
 
     #----------Imports-------------
     import os
     import numpy as np
     import nibabel as nib
-
+    import pandas as pd
 
     #----------Formatting files--------
 
@@ -49,56 +52,80 @@ def dot(path_to_img, mask_path):
     #For each map/nii file in the provided path
     for maps in data_path:
 
-        #load ongoing image
-        img = nib.load(maps)
+        if maps.endswith('.nii')
+            #load ongoing image
+            img = nib.load(maps)
 
-        #saving the file/subject's name in a list
-        subj = os.path.basename(os.path.normpath(maps))
-        subj_array.append(subj)
+            #saving the file/subject's name in a list
+            subj = os.path.basename(os.path.normpath(maps))
+            subj_array.append(subj)
 
-        #if image is not the same shape as the mask, the image will be resample
-        #mask is the original mask to dot product with the provided images
-        #counter is to make sure we only resample the mask once, to save some computing time
-        if img.shape != mask.shape and counter == 1:
+            #---------Resampling--------
 
-        #---------Resampling--------
-            print('Resampling : ' + os.path.basename(os.path.normpath(maps)))
+            #if image is not the same shape as the mask, the image will be resample
+            #mask is the original mask to dot product with the provided images
+            #counter is to make sure we only resample the mask once, to save some computing time
+            if img.shape != mask.shape and counter == 1:
 
-            #resampling img to mask's shape
-            from nilearn import image
-            resampled_mask = image.resample_to_img(mask,maps)
+                #resampling mask to images' shape
+                from nilearn import image
+                resampled_mask = image.resample_to_img(mask,maps)
 
-            print('mask has been resample to shape : {} '.format(resampled_mask.shape))
-            print('Did that  {} times '.format(counter))
+                print('mask has been resample to shape : {} '.format(resampled_mask.shape))
 
-        #---------fitting images to 1 dimension------------
-        #making mask and image a vector in order to dot product
+            #---------fitting images to 1 dimension------------
+            #making mask and image a vector in order to dot product
 
-        from nilearn.input_data import NiftiMasker
-        #Fitting the masker of the 'mask' for which we want to dot product the beta maps
-        masker_all = NiftiMasker(mask_strategy="whole-brain-template")
+            from nilearn.input_data import NiftiMasker
+            #Fitting the masker of the 'mask' for which we want to dot product the beta maps
+            masker_all = NiftiMasker(mask_strategy="whole-brain-template")
 
-        #masker of the initial mask provided, in our case the mask is called NPS
-        masker_NPS = masker_all.fit_transform(img)
+            #masker of the initial mask provided, in our case the mask is called NPS
+            masker_NPS = masker_all.fit_transform(img)
 
-        #fitting temporary masker for ongoing beta map :'maps'
-        masker_tmp = masker_all.fit_transform(resampled_mask)
+            #fitting temporary masker for ongoing beta map :'maps'
+            masker_tmp = masker_all.fit_transform(resampled_mask)
 
-        #---------Dot product---------
+            #---------Dot product---------
 
-        #dot product of the image's masker with the mask(NPS)'s masker
-        dot_res = np.dot(masker_tmp,masker_NPS.T)
+            #dot product of the image's masker with the mask(NPS)'s masker
+            dot_res = np.dot(masker_tmp,masker_NPS.T)
 
-        #storing the result in array
-        dot_array = np.append(dot_array,dot_res)
+            #storing the result in array
+            dot_array = np.append(dot_array,dot_res)
 
-        print('Computing dot product with img : ' + subj)
-        print('=====================')
-        counter += 1
-    return dot_array,subj_array
+            print('Computing dot product with img : ' + subj)
+            print('=====================')
+            counter += 1
 
 
-    #--------Saving to csv---------
+    #---------Return---------
+
+    #makinf a pandas df, one col is dot results and other is the files' name
+    df_res = pd.concat([pd.DataFrame(dot_array.T, columns = ['dot results']),
+     pd.DataFrame(subj_array, columns = ['files'])], axis=1)
+
+    #--------saving options--------
+    if save == True:
+
+        #change the file's name accordingly
+        name_to_save = 'results_dot_df.csv'
+
+        #saving according to path specified as argument
+        if path_to_save != None:
+            df_res.to_csv(os.path.join(path_to_save,'results_dot.csv'))
+            return df_res
+
+        else:
+            df_res.to_csv(os.path.join(path_to_img,'results_dot.csv'))
+            return df_res
+
+    #else, the function simply returns the pandas df with results
+    else:
+
+        return df_res
+
+
 
 ##Arguments of the function
 
@@ -107,6 +134,6 @@ imgs_path = r'C:\Users\Dylan\Desktop\UdeM_E22\Projet_Ivado_rainvillelab\results_
 
 
 
-dot_array, subj_array = dot(imgs_path,NPS_path)
+results = dot_fmri(imgs_path,NPS_path, save =True)
 
-print(dot_array, subj_array)
+
