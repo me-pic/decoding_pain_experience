@@ -1,8 +1,5 @@
 
 
-#python ./dot_product.py --path_to_data "/Volumes/LaCie/Im_Exp_Kunz/TxT_Pain/MK" --path_output "/Users/mepicard/Documents/master_analysis/output/Dot_product" --signature "nps" --condition "pain" --resample_to_mask True
-
-
 def dot(path_to_img, path_output, signature = 'nps', conditions = None, resample_to_mask=True): 
     """
     Parameters
@@ -31,11 +28,11 @@ def dot(path_to_img, path_output, signature = 'nps', conditions = None, resample
     #---------Define signature path-----
 
     if signature == "nps":
-        mask_path = "/Volumes/LaCie/Im_Exp_Kunz/NPS_Signature/weights_NSF_grouppred_cvpcr.hdr"
+        mask_path = "weights_NSF_grouppred_cvpcr.hdr"
     if signature == "siips":
-        mask_path = "/Volumes/LaCie/Im_Exp_Kunz/SIIPS_Signature/nonnoc_v11_4_137subjmap_weighted_mean.nii"
+        mask_path = "nonnoc_v11_4_137subjmap_weighted_mean.nii"
     if signature == "vps":
-        mask_path = "/Volumes/LaCie/Im_Exp_Kunz/VPS_Signature/bmrk4_VPS_unthresholded.nii"
+        mask_path = "bmrk4_VPS_unthresholded.nii"
 
     if resample_to_mask:
         resamp = "img_to_mask"
