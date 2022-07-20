@@ -62,7 +62,6 @@ def get_subj_data(data_dir, prefix = None):
 
 def get_timestamps(data_path, subj_name, timestamps_path_root, return_df=None):
 
-
     """
     Parameters
     ----------
@@ -77,11 +76,9 @@ def get_timestamps(data_path, subj_name, timestamps_path_root, return_df=None):
     timestamps_path : a path to the timestamps file or if return_df =True, a pandas dataFrame which is named df_timestamps
     """
 
-    movement_reg_list = [i for i in os.listdir(subj_path) if i.startswith('APM')]
-    mvmnt_reg_path = os.path.join(subj_path,movement_reg_list[0])
 
     #Read the file
-    df_mvmnt_reg_full = pd.read_csv(mvmnt_reg_path, sep= '\s+', header=None)
+
 #======================================
 
     #condition file is e.g. 02-Analgesia, it's the file that contains the fMRI volumes
@@ -92,32 +89,32 @@ def get_timestamps(data_path, subj_name, timestamps_path_root, return_df=None):
         #TIMESTAMPS
         if subj_name == 'APM_02_H2':
             if return_df:
-                timestamps = scipy.io.loadmat(os.path.join(timestamps_path_root,r'ASTREFF_Model6_TxT_model3_multicon_APM02_HYPER.mat'))#.mat option
+                timestamps = scipy.io.loadmat(os.path.join(timestamps_path_root,r'ASTREFF_Model6_TxT_model3_multicon_APM02_HYPER.mat'),simplify_cells =True)#.mat option
             else:
                 timestamps_path = os.path.join(timestamps_path_root, r'ASTREFF_Model6_TxT_model3_multicon_APM02_HYPER.xlsx')#csv option
 
         elif subj_name == 'APM_05_H2':
             if return_df:
-                timestamps = scipy.io.loadmat(os.path.join(timestamps_path_root,r'ASTREFF_Model6_TxT_model3_multicon_APM05_HYPER.mat'))#.mat option
+                timestamps = scipy.io.loadmat(os.path.join(timestamps_path_root,r'ASTREFF_Model6_TxT_model3_multicon_APM05_HYPER.mat'),simplify_cells =True)#.mat option
             else:
                 timestamps_path = os.path.join(timestamps_path_root, r'ASTREFF_Model6_TxT_model3_multicon_APM05_HYPER.xlsx')
 
         elif subj_name == 'APM_17_H2':
             if return_df:
-                timestamps = scipy.io.loadmat(os.path.join(timestamps_path_root,r'ASTREFF_Model6_TxT_model3_multicon_APM17_HYPER.mat'))#.mat option
+                timestamps = scipy.io.loadmat(os.path.join(timestamps_path_root,r'ASTREFF_Model6_TxT_model3_multicon_APM17_HYPER.mat'),simplify_cells =True)#.mat option
             else:
                 timestamps_path = os.path.join(timestamps_path_root, r'ASTREFF_Model6_TxT_model3_multicon_APM17_HYPER.xlsx')
 
         elif subj_name == 'APM_20_H2':
             if return_df:
-                timestamps = scipy.io.loadmat(os.path.join(timestamps_path_root,r'ASTREFF_Model6_TxT_model3_multicon_APM20_HYPER.mat'))#.mat option
+                timestamps = scipy.io.loadmat(os.path.join(timestamps_path_root,r'ASTREFF_Model6_TxT_model3_multicon_APM20_HYPER.mat'),simplify_cells =True)#.mat option
             else:
                 timestamps_path = os.path.join(timestamps_path_root, r'ASTREFF_Model6_TxT_model3_multicon_APM20_HYPER.xlsx')
 
             #timestamps HYPER pour les sujets normaux dans H2
-        else :
+        else :#For all other subjects
             if return_df:
-                timestamps = scipy.io.loadmat(os.path.join(timestamps_path_root,r'ASTREFF_Model6_TxT_model3_multicon_HYPER.mat'))#.mat option
+                timestamps = scipy.io.loadmat(os.path.join(timestamps_path_root,r'ASTREFF_Model6_TxT_model3_multicon_HYPER.mat'),simplify_cells =True)#.mat option
             else :
                 timestamps_path = os.path.join(timestamps_path_root, r'ASTREFF_Model6_TxT_model3_multicon_HYPER.xlsx')
 
@@ -126,46 +123,48 @@ def get_timestamps(data_path, subj_name, timestamps_path_root, return_df=None):
 
         if subj_name == 'APM_02_H2':
             if return_df:
-                timestamps = scipy.io.loadmat(os.path.join(timestamps_path_root,r'ASTREFF_Model6_TxT_model3_multicon_APM02_ANA.mat'))
+                timestamps = scipy.io.loadmat(os.path.join(timestamps_path_root,r'ASTREFF_Model6_TxT_model3_multicon_APM02_ANA.mat'),simplify_cells =True)
             else:
                 timestamps_path = os.path.join(timestamps_path_root, r'ASTREFF_Model6_TxT_model3_multicon_APM02_ANA.xlsx')
 
         elif subj_name == 'APM_05_H2':
             if return_df:
-                timestamps = scipy.io.loadmat(os.path.join(timestamps_path_root,r'ASTREFF_Model6_TxT_model3_multicon_APM05_ANA.mat'))
+                timestamps = scipy.io.loadmat(os.path.join(timestamps_path_root,r'ASTREFF_Model6_TxT_model3_multicon_APM05_ANA.mat'),simplify_cells =True)
             else:
                 timestamps_path = os.path.join(timestamps_path_root, r'ASTREFF_Model6_TxT_model3_multicon_APM05_ANA.xlsx')
 
         elif subj_name == 'APM_17_H2':
             if return_df:
-                timestamps = scipy.io.loadmat(os.path.join(timestamps_path_root,r'ASTREFF_Model6_TxT_model3_multicon_APM17_ANA.mat'))
+                timestamps = scipy.io.loadmat(os.path.join(timestamps_path_root,r'ASTREFF_Model6_TxT_model3_multicon_APM17_ANA.mat'),simplify_cells =True)
             else:
                 timestamps_path = os.path.join(timestamps_path_root, r'ASTREFF_Model6_TxT_model3_multicon_APM17_ANA.xlsx')
 
         elif subj_name == 'APM_20_H2':
             if return_df:
-                timestamps =scipy.io.loadmat(os.path.join(timestamps_path_root,r'ASTREFF_Model6_TxT_model3_multicon_APM20_ANA.mat'))
+                timestamps =scipy.io.loadmat(os.path.join(timestamps_path_root,r'ASTREFF_Model6_TxT_model3_multicon_APM20_ANA.mat'),simplify_cells =True)
             else:
                 timestamps_path = os.path.join(timestamps_path_root, r'ASTREFF_Model6_TxT_model3_multicon_APM20_ANA.xlsx')
 
         #timestamps HYPO/ANA for other 'normal' subjects
         else :
             if return_df:
-                timestamps = scipy.io.loadmat(os.path.join(timestamps_path_root,r'ASTREFF_Model6_TxT_model3_multicon_ANA.mat'))
+                timestamps = scipy.io.loadmat(os.path.join(timestamps_path_root,r'ASTREFF_Model6_TxT_model3_multicon_ANA.mat'),simplify_cells =True)
             else:
                 timestamps_path = os.path.join(timestamps_path_root, r'ASTREFF_Model6_TxT_model3_multicon_ANA.xlsx')
+
+    #-----return------
     #if the return is supposed to be a dataframe
     if return_df :
 
         df_timestamps = pd.concat([pd.DataFrame(timestamps['onsets']),pd.DataFrame(timestamps['durations']),pd.DataFrame(timestamps['names'])], axis = 1)
-        df_timestamps.columns = ['onsets' , 'durations','Events']
+        df_timestamps.columns = ['onset', 'duration','trial_type']
 
         return df_timestamps
     #else return the path
     else:
         return timestamps_path
 
-#def get_mvmnt_reg(path)
+
 
 def split_reg_upper(matrix_to_split, target_lenght):
 

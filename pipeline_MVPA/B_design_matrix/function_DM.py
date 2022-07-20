@@ -1,93 +1,71 @@
-##fonction qui importe les données (volumes pour un participant)
 
-import pandas as pd
-import numpy as np
 import os
+import numpy as np
+import pandas as pd
+import nibabel as nib
+from nilearn.glm.first_level import make_first_level_design_matrix
+from nilearn.image import concat_imgs, mean_img
 
-                                         
-#/////////////////////////////////////////////////////////
-#root_dir = r'E:\Users\Dylan\Desktop\UdeM_H22\E_PSY3008\data_desmartaux\Nii'
-#subject = 'APM_03_H1'
+def create_DM(subject_data, timestamps, DM_name, df_mvmnt_reg):
 
-#variable utilisé comme paramètres de la fonction en guise de test
-#data_dir = r'E:\Users\Dylan\Desktop\UdeM_H22\E_PSY3008\data_desmartaux\Nii\APM_03_H1\02-Analgesia'
-#dir_anat = r'E:\Users\Dylan\Desktop\UdeM_H22\E_PSY3008\Analyses_conn\DATA_Desmateaux_Rainville\H1\APM_03_H1\01-MEMPRAGE\wms201301101300-0004-00001-000176-01.nii'
-#timestamps_path = r'C:\Users\Dylan\Desktop\UdeM_H22\PSY3008\times_stamps\ASTREFF_Model6_TxT_model3_multicon_ANA.xlsx'
+    """
+    Description
+    A function that computes a design matrix using the nilearn function make_first_level_design_matrix.
+    *Some parameters must be adapted to the study design*
+    It returns a pandas design matrix and a 4D time series of the subject nii data.
 
-#DM_name = 'DM_HYPER_' + subject
-#dir_to_save = os.path.join(root_dir,subject)
+    Variables
 
-def create_DM(subject_data, timestamps_path, DM_name, regresseurs_mvmnt):
+    subject_data : A list with all the paths to nii images
+    timestamps_path : Path to timestamps
+    DM_name : Name of the design matrix, under which it will be saved
+    regresseurs_mvmnt : matrix for the mouvment regressors
+    """
+    print('====================================')
+    print('COMPUTING design matrix under name : ' + DM_name)
 
-    #fonction qui compute une DM selon un timestamp, des régresseurs de mouvements,
-    #un nom à donner à la DM et des volumes nifti
-    import os
-    import numpy as np
-    import pandas as pd
-    import nibabel as nb
-
-
-    #Extraction des volumes pour un sujet
-    from nilearn.image import concat_imgs, mean_img
-    fmri_img = concat_imgs(subject_data)
-    #print('SHAPE de FMRI IMG est {0}'.format(fmri_img.shape))
+    #Extraction of subject'volumes (4D nii file)
+    fmri_time_series = concat_imgs(subject_data)
 
     #////////////TIMESTAMPS////////////////
+    if type(timestamps) is str:
 
-    events = pd.read_excel(timestamps_path, header=None)
-    #formatage des type des entrées et insertion de titres
-    events = pd.DataFrame.transpose(events)
-    events.rename(columns = {0:'onset', 1:'duration', 2:'trial_type'}, inplace = True)
+        timestamps = pd.read_excel(timestamps_path, header=None)
+        #formatage des type des entrées et insertion de titres
+        timestamps = pd.DataFrame.transpose(events)
+        timestamps.rename(columns = {0:'onset', 1:'duration', 2:'trial_type'}, inplace = True)
 
-    events['onset'] = events['onset'].astype(np.float64)
-    events['duration'] = events['duration'].astype(np.float64)
-    events['trial_type'] = events['trial_type'].astype(np.str)
+    timestamps['onset'] = timestamps['onset'].astype(np.float64)
+    timestamps['duration'] = timestamps['duration'].astype(np.float64)
+    timestamps['trial_type'] = timestamps['trial_type'].astype(np.str)
 
-    #///////////Design_Matrix/////////////////
-
-    #paramètres de l'études
-    tr = 3.  # repetition time, in seconds
-    #slice_time_ref = 0.  # Sample at the beginning of each acquisition.
-    #drift_model = 'Cosine'  # We use a discrete cosine transform to model signal drifts.
-    #high_pass = .00233645  # The cutoff for the drift model is 0.01 Hz.
-    #hrf_model = 'spm + derivative'  # The hemodynamic response function is the SPM canonical one.
-
-
-
-    from nilearn.image import concat_imgs, mean_img
-    from nilearn.glm.first_level import make_first_level_design_matrix
-    from nilearn.image import concat_imgs, mean_img
-
-
-    #fmri_img = concat_imgs(subject_data)
-    #mean_img = mean_img(fmri_img)
+    #!!change the tr and function's parameters according to study design!!
+    tr = 3.
     n_scans = len(subject_data)
-
     frame_times = np.arange(n_scans) * tr
 
-
-    design_matrices = []
     design_matrix = make_first_level_design_matrix(
                 frame_times,
-                events,
+                timestamps,
                 hrf_model='spm',
                 drift_model='cosine',
                 high_pass=.00233645,
-                add_regs = regresseurs_mvmnt) #array of shape(n_frames, n_add_reg)
+                add_regs = df_mvmnt_reg) #array of shape(n_frames, n_add_reg)
 
-    #/////////////PRINTS///////////////
-    #print('SHAPE DE L\'IMAGE est {0}'.format(fmri_img.shape))
-    print('SHAPE DU TIMESPTAMPS est {0}'.format(events.shape))
+    #================Prints for info================
 
-    #/////////////plot option///////////////
+    print('SHAPE of TIMESPTAMPS is {0}'.format(timestamps.shape))
+    print('SHAPE of MOVEMENT REGRESSORS: {} '.format(df_mvmnt_reg.shape))
+    print('SHAPE OF fMRI TIMESERIES : {} '.format(fmri_time_series.shape))
+    print('SHAPE OF DESIGN MATRIX : {} '.format(design_matrix.shape))
 
+    #================plot option================
     #from nilearn.plotting import plot_design_matrix
-
     #plot_design_matrix(design_matrix)
     #import matplotlib.pyplot as plt
     #plt.show()
     #design_matrix.shape
 
 
-    return design_matrix, fmri_img
+    return design_matrix, fmri_time_series
 
