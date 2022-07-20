@@ -1,6 +1,3 @@
-import numpy as np
-import os
-import pandas as pd
 
 #////////////////variables to set/////////////////////////
 # /!\
@@ -8,13 +5,33 @@ import pandas as pd
 
 #main path to data, change according to environment
 root_dir = r'E:\Users\Dylan\Desktop\UdeM_H22\E_PSY3008\data_desmartaux\Nii'
-dir_to_save = r'C:\Users\Dylan\Desktop\UdeM_E22\Projet_Ivado_rainvillelab\results_GLM\GLM_1st_level_all_shocks'
+dir_to_save = r'C:\Users\Dylan\Desktop\UdeM_E22\Projet_Ivado_rainvillelab\results_GLM\testing_scripts'
 
 #SERVEUR elm
-"""
-root_dir = r'/data/rainville/dylan_projet_ivado_decodage/Nii'
-dir_to_save = r'/data/rainville/dylan_projet_ivado_decodage/results/GLM_1st_level_all_shocks'
-"""
+
+#root_dir = r'/data/rainville/dylan_projet_ivado_decodage/Nii'
+#dir_to_save = r'/data/rainville/dylan_projet_ivado_decodage/results/GLM_1st_level_all_shocks'
+
+ # /!\
+ #/_!_\ to change according to computer
+ #local
+timestamps_root_path = r'C:\Users\Dylan\Desktop\BAC_neurocog\UM_H22\PSY3008\times_stamps'
+
+ #elm
+ #timestamps_path_root = r'/data/rainville/dylan_projet_ivado_decodage/All_run_timestamps'
+
+
+import numpy as np
+import os
+import pandas as pd
+import glob
+import nibabel as nib
+from nilearn.plotting import plot_design_matrix
+import matplotlib.pyplot as plt
+from A_data_prep import function_code as A_data_prep
+from B_design_matrix import function_DM as B_design_matrix
+from C_contrasts import function_contrasts as contrast
+
 #==============================================================
 #store all subject's name in a list
 ls_subj_name = [subject for subject in os.listdir(root_dir)]
@@ -23,181 +40,116 @@ ls_subj_name = [subject for subject in os.listdir(root_dir)]
 ls_subj_path  = [os.path.join(root_dir,subject) for subject in os.listdir(root_dir)]
 
 
-#////////////////iterations over files and data/////////////////////////
-
-index_count = 0
-
-#pour pour faire itération de chaque sujet à travers la liste de tous les path des sujets
 for subj_path in ls_subj_path:
 
-    #store subject's name
-    subj_name = ls_subj_name[index_count]
-
-    ##Saving preparation
     #=================
-
-    #change according to needs
+    subj_name = os.path.basename(os.path.normpath(subj_path)) #extract last part of subj_path to get subject's name
+    print(subj_name + ' = subj_name')
+    #=================
+    #Creating a dir to save, only if it doesn't exists
     if os.path.exists(os.path.join(dir_to_save,subj_name)) is False:
 
         os.mkdir(os.path.join(dir_to_save,subj_name))
     else :
-        print('')
+        pass
+    #=================
+    #looking for the regressors' file, which starts with 'APM' and read it as csv
+    movement_reg_name = [i for i in os.listdir(subj_path) if i.startswith('APM')]
+    mvmnt_reg_path = os.path.join(subj_path,movement_reg_name[0])#movement_reg_name[0] because there's only one item in the list
+    df_mvmnt_reg_full = pd.read_csv(mvmnt_reg_path, sep= '\s+', header=None)#full because we'll split it later according to condition
 
+    #=================
+    #file names that contains the fMRI volumes.
+    str_analgesia ='Analgesia'
+    str_hyper = 'Hyperalgesia'
+    test_index = 0
+    #Main loop that will go over the condition's file, and generate a design matrix (DM) and a contrast according to the condition
+    #In that loop, a Timestamps,a DM name,a mouvement regressors dataframe, a DM and statistical maps will be generated and saved
+    for condition_file in [i for i in os.listdir(subj_path) if str_analgesia in i or str_hyper in i]:
+        print(condition_file + ' = condition_file')
 
-    #for all the file in subject_path that starts with 02 or 03
-    for file in [i for i in os.listdir(subj_path) if i.startswith('02') or i.startswith('03')]:
+        #-------Extracting fMRI volumes-------
 
-        data_path = os.path.join(subj_path,file)
-        #print(file)
+        data_path = os.path.join(subj_path,condition_file) #path to the data such as : /subj_01/02-Analgesia/<all nii files>
+        subj_volumes= glob.glob(os.path.join(data_path,'sw*'))#extracting all the nii files that start with sw
+        print('{} NII files in path {} for subject {}'.format(len(subj_volumes),data_path,subj_name))
+        print('lenght of movement regesssor df : {}'.format(len(df_mvmnt_reg_full)))
 
-        #//////data//////
-        #extract the nii data that is specific to each 02 or 03 file for a particular subject
+        #-------Extracting timestamps--------
 
-        # /!\
-        #/_!_\ to change according to computer
-        #local
-        timestamps_path_root = r'E:\Users\Dylan\Desktop\UdeM_H22\E_PSY3008\data_desmartaux\time_stamps_HYPER'
+        timestamps = A_data_prep.get_timestamps(data_path, subj_name,timestamps_root_path,return_df =True)
+        timestamps.sort_values(by=['onset'])
 
-        #elm
-        #timestamps_path_root = r'/data/rainville/dylan_projet_ivado_decodage/All_run_timestamps'
+        #-------design matrix name and mouvement regessors--------
 
-        from A_data_prep import function_code as A
+        #defining design matrix name and mouvement regessors according to condition
+        if str_analgesia in condition_file:
+            condition = 'HYPO'
+            DM_name = 'DM_HYPO_' + subj_name + '.csv' #Initializing the name under which the design matrix will be saved
+            #splitting either the first half or lower half of the mvmnt regressor df according to condition (analg/hyper)
+            mvmnt_reg_df = A_data_prep.split_reg_upper(df_mvmnt_reg_full,len(subj_volumes))
 
-        #function that returns a list with all nii paths in the file
-        subj_data = A.get_subj_data(data_path, 'sw')
+        else:
+            condition = 'HYPER'
+            DM_name = 'DM_HYPER_' + subj_name + '.csv'
+            mvmnt_reg_df = A_data_prep.split_reg_lower(df_mvmnt_reg_full,len(subj_volumes))
 
-        #//////extraction of customize variable//////
-
-        #here we extract some variable needed to make the design_matrix
-        #Those variables change according to the condition (H2/H1) and the run (hyper/hypo)
-
-
-        timestamps_path, DM_name, df_mvmnt_reg, condition = A.adapt_data(subj_path, file, subj_name, subj_data, timestamps_path_root)
-
-        #print(timestamps_path)
-        #print(DM_name)
-        #print(df_mvmnt_reg.shape)
-
-        ##############################################
+        #------DESIGN MATRIX------
         #check if the DM already exists in path to we save computing time
-
         if os.path.exists(os.path.join(dir_to_save, subj_name, DM_name)) is False:
 
-            ###############################################
-            #//////DESIGN MATRIX//////
-            ###############################################
+            design_matrix, fmri_time_series = B_design_matrix.create_DM(subj_volumes, timestamps, DM_name, mvmnt_reg_df)
 
-            #In this section, we reuse the variable defined before to make the DM
-            from B_design_matrix import function_DM as B
-
-            print('====================================')
-            print('COMPUTING design matrix under name : ' + DM_name + ' for subject ' + subj_name)
-
-            design_matrix, fmri_img= B.create_DM(subj_data, timestamps_path, DM_name, df_mvmnt_reg)
-
-            #/////prints for info/////
-
-            print('SHAPE DES REGRESSEURS DE MOUVEMENT : {} '.format(df_mvmnt_reg.shape))
-            print('SHAPE DES VOLUMES CONCATÉNÉS NII : {} '.format(fmri_img.shape))
-            print('SHAPE DE LA DESIGN MATRIX : {} '.format(design_matrix.shape))
-
-            #//////////SAVING OUTPUTS/////////
-
-            #saving design_matrix
+            #----------SAVING OUTPUTS------------
+            #saving design_matrix and time series
             design_matrix.to_csv(os.path.join(dir_to_save,subj_name,DM_name), index = False)
 
-            #saving concatenated nii files
+            fmri_img_name = subj_name + '_' + condition + '_fmri_time_series.nii'
+            nib.save(fmri_time_series, os.path.join(dir_to_save,subj_name,fmri_img_name))
 
-            import nibabel as nib
-            #nib.save(design_matrix, os.path.join(dir_to_save,subj_name,DM_name))
-
-            fmri_img_name = subj_name + '_' + condition + '_' + 'concat_fmri.nii'
-            nib.save(fmri_img, os.path.join(dir_to_save,subj_name,fmri_img_name))
-            #print('SAVING fmri_img having SHAPE : {} '.format(fmri_img.shape))
-
-        #if the design matrix is already existant in the folder
         else:
-
             print('Design matrix in condition _{}_  is already existant for : {} '.format(condition, subj_name))
 
             design_matrix = pd.read_csv(os.path.join(dir_to_save, subj_name, DM_name))
+            fmri_img_name = subj_name + '_' + condition + '_fmri_time_series.nii'
+            print(os.path.join(dir_to_save,subj_name, fmri_img_name))
+            fmri_time_series = nib.load(os.path.join(dir_to_save,subj_name, fmri_img_name))
 
-            import nibabel as nib
-
-            fmri_img_name = subj_name + '_' + condition + '_' + 'concat_fmri.nii'
-
-            #we want to select only the file nii that starts with AMP
-            #target_file = [x for x in os.listdir(os.path.join(dir_to_save,subj_name)) if x.startswith('APM') and if x.]
-
-            fmri_img = nib.load(os.path.join(dir_to_save,subj_name, fmri_img_name))
-                #join(dir_to_save, subj_name, fmri_img_name))
-
-
-        #//////Plot option//////
-
+        #-------Plot option-------
         #Uncomment to plot the design matrix as it's generated
         #from nilearn.plotting import plot_design_matrix
-
-        #from nilearn.plotting import plot_design_matrix
-        #import matplotlib.pyplot as plt
-
         #plot_design_matrix(design_matrix)
         #plt.show()
 
-
-
-        ################################################
-        #///////CONTRAST////////
-        ################################################
-
+        #-------CONTRAST-------
         #define a done_file name to check if it  already exists in file
         done_file_name = 'done_contrast_' + condition + '.txt'
 
         #Verify if contrast for both design matrices has been donne to avoid unecessary computing
         if os.path.exists(os.path.join(dir_to_save,subj_name,done_file_name)) == False : #to enter the contrast section:
+            #contrast for a single shock activation map
+            contrast.glm_contrast_1event(design_matrix, os.path.join(dir_to_save,subj_name), subj_name, fmri_time_series, run = condition)
 
-            print('===================================')
-            print('STARTING CONTRAST FOR : ' + subj_name)
+            #contrast for all shocks activation map, one for each design matrix will be made
+            #contrast.glm_contrast_all_shocks(design_matrix, os.path.join(dir_to_save,subj_name), subj_name, fmri_time_series, run = condition)
 
-            ###################
-            #COMPUTING CONTRAST
-            ###################
-
-            from C_contrasts import function_contrasts as contrast
-
-            # /!\
-            #/_!_\ adapt this function according to the type of contrast you want to compute
-
-            ##contrast for a single shock activation map
-
-            #on met en argument, la DM, le path pour save, le nom du sujet et les volumes nii
-
-            #contrast.glm_contrast_1event(design_matrix,os.path.join(dir_to_save,subj_name), subj_name, fmri_img)
-
-            ##contrast for all shocks activation map, one for each design matrix will be made
-
-
-
-            contrast.glm_contrast_all_shocks(design_matrix, os.path.join(dir_to_save,subj_name), subj_name, fmri_img, run = condition)
-
-
-
-            ###################
-            #SAVING AND KEEPING TRACK OF WHAT HAS BEEN DONE
-            ###################
-
+            #-------SAVING-------
             #write done_contrast_hyper/hypo to keep track of what has been computed
             done_file=open(os.path.join(dir_to_save,subj_name,done_file_name), 'w')
             done_file.write('')
             done_file.close()
             print('HAVE WRITTEN : ' + done_file_name)
 
-
         else:
             print('Contrast : _{}_ has already been done for subject : {} '.format(condition, subj_name))
+        test_index += 1
 
+#Argument parser
+if __name__ == "__main__":
+    from argparse import ArgumentParser
 
-
-    index_count += 1
-
-
+    parser = ArgumentParser()
+    parser.add_argument("--root_dir", type=str) #dir to the subjects' files containing the fmri data
+    parser.add_argument("--dir_to_save", type=str) #path to save the output
+    parser.add_argument("--timestamps_path_root", type=str) #path to the timestamps files
+    args = parser.parse_args()
