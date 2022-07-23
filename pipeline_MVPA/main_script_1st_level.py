@@ -4,21 +4,21 @@
 #/_!_\ to change according to computer
 
 #main path to data, change according to environment
-root_dir = r'E:\Users\Dylan\Desktop\UdeM_H22\E_PSY3008\data_desmartaux\Nii'
-dir_to_save = r'C:\Users\Dylan\Desktop\UdeM_E22\Projet_Ivado_rainvillelab\results_GLM\testing_scripts'
+#root_dir = r'E:\Users\Dylan\Desktop\UdeM_H22\E_PSY3008\data_desmartaux\Nii'
+#dir_to_save = r'C:\Users\Dylan\Desktop\UdeM_E22\Projet_Ivado_rainvillelab\results_GLM\testing_scripts'
 
 #SERVEUR elm
 
-#root_dir = r'/data/rainville/dylan_projet_ivado_decodage/Nii'
-#dir_to_save = r'/data/rainville/dylan_projet_ivado_decodage/results/GLM_1st_level_all_shocks'
+root_dir = r'/data/rainville/dylan_projet_ivado_decodage/Nii'
+dir_to_save = r'/data/rainville/dylan_projet_ivado_decodage/results/GLM_1st_level_each_shock'
 
- # /!\
- #/_!_\ to change according to computer
- #local
-timestamps_root_path = r'C:\Users\Dylan\Desktop\BAC_neurocog\UM_H22\PSY3008\times_stamps'
+# /!\
+#/_!_\ to change according to computer
+#local
+#timestamps_root_path = r'C:\Users\Dylan\Desktop\BAC_neurocog\UM_H22\PSY3008\times_stamps'
 
  #elm
- #timestamps_path_root = r'/data/rainville/dylan_projet_ivado_decodage/All_run_timestamps'
+timestamps_path_root = r'/data/rainville/dylan_projet_ivado_decodage/time_stamps'
 
 
 import numpy as np
@@ -65,7 +65,7 @@ for subj_path in ls_subj_path:
     test_index = 0
     #Main loop that will go over the condition's file, and generate a design matrix (DM) and a contrast according to the condition
     #In that loop, a Timestamps,a DM name,a mouvement regressors dataframe, a DM and statistical maps will be generated and saved
-    for condition_file in [i for i in os.listdir(subj_path) if str_analgesia in i or str_hyper in i]:
+    for condition_file in [i for i in os.listdir(subj_path) if str_analgesia in i or str_hyper in i ]:
         print(condition_file + ' = condition_file')
 
         #-------Extracting fMRI volumes-------
@@ -82,34 +82,22 @@ for subj_path in ls_subj_path:
 
         #-------design matrix name and mouvement regessors--------
 
+        condition, DM_name = A_data_prep.if_str_in_file(condition_file)#checks if str_analgesia or str_hyper is in condition_file
         #defining design matrix name and mouvement regessors according to condition
-        if str_analgesia in condition_file:
-            condition = 'HYPO'
-            DM_name = 'DM_HYPO_' + subj_name + '.csv' #Initializing the name under which the design matrix will be saved
-            #splitting either the first half or lower half of the mvmnt regressor df according to condition (analg/hyper)
-            mvmnt_reg_df = A_data_prep.split_reg_upper(df_mvmnt_reg_full,len(subj_volumes))
-
-        else:
-            condition = 'HYPER'
-            DM_name = 'DM_HYPER_' + subj_name + '.csv'
-            mvmnt_reg_df = A_data_prep.split_reg_lower(df_mvmnt_reg_full,len(subj_volumes))
 
         #------DESIGN MATRIX------
         #check if the DM already exists in path to we save computing time
         if os.path.exists(os.path.join(dir_to_save, subj_name, DM_name)) is False:
 
             design_matrix, fmri_time_series = B_design_matrix.create_DM(subj_volumes, timestamps, DM_name, mvmnt_reg_df)
-
             #----------SAVING OUTPUTS------------
             #saving design_matrix and time series
             design_matrix.to_csv(os.path.join(dir_to_save,subj_name,DM_name), index = False)
-
             fmri_img_name = subj_name + '_' + condition + '_fmri_time_series.nii'
             nib.save(fmri_time_series, os.path.join(dir_to_save,subj_name,fmri_img_name))
 
         else:
             print('Design matrix in condition _{}_  is already existant for : {} '.format(condition, subj_name))
-
             design_matrix = pd.read_csv(os.path.join(dir_to_save, subj_name, DM_name))
             fmri_img_name = subj_name + '_' + condition + '_fmri_time_series.nii'
             print(os.path.join(dir_to_save,subj_name, fmri_img_name))
@@ -121,14 +109,13 @@ for subj_path in ls_subj_path:
         #plot_design_matrix(design_matrix)
         #plt.show()
 
-        #-------CONTRAST-------
-        #define a done_file name to check if it  already exists in file
-        done_file_name = 'done_contrast_' + condition + '.txt'
+        done_file_name = 'done_contrast_' + condition + '.txt' #define a done_file name to check if it  already exists in file
 
-        #Verify if contrast for both design matrices has been donne to avoid unecessary computing
+
         if os.path.exists(os.path.join(dir_to_save,subj_name,done_file_name)) == False : #to enter the contrast section:
+            #-------CONTRAST-------
             #contrast for a single shock activation map
-            contrast.glm_contrast_1event(design_matrix, os.path.join(dir_to_save,subj_name), subj_name, fmri_time_series, run = condition)
+            #contrast.glm_contrast_1event(design_matrix, os.path.join(dir_to_save,subj_name), subj_name, fmri_time_series, run = condition)
 
             #contrast for all shocks activation map, one for each design matrix will be made
             #contrast.glm_contrast_all_shocks(design_matrix, os.path.join(dir_to_save,subj_name), subj_name, fmri_time_series, run = condition)
@@ -152,4 +139,5 @@ if __name__ == "__main__":
     parser.add_argument("--root_dir", type=str) #dir to the subjects' files containing the fmri data
     parser.add_argument("--dir_to_save", type=str) #path to save the output
     parser.add_argument("--timestamps_path_root", type=str) #path to the timestamps files
+    parser.add_argument("--many_runs", type=str)
     args = parser.parse_args()

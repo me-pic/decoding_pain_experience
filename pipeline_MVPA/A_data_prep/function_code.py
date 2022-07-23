@@ -205,4 +205,20 @@ def split_reg_lower(matrix_to_split, target_lenght):
 
     return split_matrix
 
+def if_str_in_file(condition_file)
 
+    str_analgesia ='Analgesia'
+    str_hyper = 'Hyperalgesia'
+#defining design matrix name and mouvement regessors according to condition
+    if str_analgesia in condition_file:
+        condition = 'HYPO'
+        DM_name = 'DM_HYPO_' + subj_name + '.csv' #Initializing the name under which the design matrix will be saved
+        #splitting either the first half or lower half of the mvmnt regressor df according to condition (analg/hyper)
+        mvmnt_reg_df = A_data_prep.split_reg_upper(df_mvmnt_reg_full,len(subj_volumes))
+
+    else:
+        condition = 'HYPER'
+        DM_name = 'DM_HYPER_' + subj_name + '.csv'
+        mvmnt_reg_df = A_data_prep.split_reg_lower(df_mvmnt_reg_full,len(subj_volumes))
+
+    return condition,DM_name,mvmnt_reg_df
