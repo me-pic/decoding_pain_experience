@@ -35,6 +35,7 @@ from nilearn.image import concat_imgs, mean_img
 anat_img = nib.load(r'C:\Users\Dylan\Desktop\UdeM_H22\PSY3008\Analyse_PPI_psy3008\Avg_Anat\Avg_24subjs_T1.hdr')
 
 #############################################
+
 #############################################
 #if file.startswith('beta'):
 
@@ -74,7 +75,7 @@ html_view.open_in_browser()
 #DOT PRODUCT NOTES
 
 #https://stackoverflow.com/questions/49281459/np-dot-product-between-two-3d-matrices-along-specified-axis
-"""
+
  a = np.random.normal(size=[3,2,5])
  b = np.random.normal(size=[5,2,3])
 
@@ -102,8 +103,24 @@ img = r'C:\Users\Dylan\Desktop\UdeM_E22\Projet_Ivado_rainvillelab\results_glm_al
 
 input_images = session.run(filenames(img))
 
-"""
 
 
+#validtion of len of mouvement regessors
+ls_upper = []
+ls_lower =[]
+ls_len_all = []
+
+count = 0
+print(ls_lower,ls_upper,ls_len_all)
+for num in ls_upper:
+
+    somme = num + ls_lower[count]
+    print('sum between {} and {} = {}'.format(num,ls_lower[0],somme))
+
+    if somme != ls_len_all[count]:
+        #print(somme, ls_len_all[0])
+        print('error for index : {}'.format(count))
+    count += 1
+    print('===========')
 
 
