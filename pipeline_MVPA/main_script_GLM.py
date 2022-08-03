@@ -60,8 +60,11 @@ def main(root_dir = None, timestamps_path = None, dir_to_save= None, contrast_ty
             save_DM = os.path.join(dir_to_save,'DM_timeseries')
             if os.path.exists(save_DM) is False:
                 os.mkdir(save_DM)
-            design_matrices, fmri_time_series, conditions = B_design_matrix.compute_DM(subj_path,timestamps_root_path,3, save = save_DM)
-
+            design_matrices, fmri_time_series, conditions = B_design_matrix.compute_DM(subj_path,timestamps_path,3, save = save_DM)
+        print(design_matrices[0])
+        print('HERRRRE')
+        print(type(design_matrices[0]))
+        print(design_matrices[0].shape)
         #-----Contrast-----
         if contrast_type == 'each_shocks':
             beta_map, contrast_path = contrast.glm_contrast_1event(design_matrices,
@@ -83,7 +86,7 @@ def main(root_dir = None, timestamps_path = None, dir_to_save= None, contrast_ty
 
 compute_DM = r'C:\Users\Dylan\Desktop\UdeM_E22\Projet_Ivado_rainvillelab\results_GLM\test_res_GLM\DM_timeseries'
 #contrast_type = 'all_shocks'
-main(root_dir = root_dir,timestamps_path = timestamps_root_path,  dir_to_save= dir_to_save,compute_DM = compute_DM, contrast_type = 'all_shocks')
+main(root_dir = root_dir,timestamps_path = timestamps_root_path,  dir_to_save= dir_to_save,compute_DM = True, contrast_type = 'all_shocks')
 
 
 

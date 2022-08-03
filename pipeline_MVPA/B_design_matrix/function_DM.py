@@ -39,7 +39,7 @@ def compute_DM(subj_path,timestamps_root_path,tr, save = None, runs = True):
     if runs:
         design_matrices = []
         all_fmri_timeseries = []
-        conditions = []
+        conditions_ls = []
         DM_names = []
         #In that loop, a Timestamps,a DM name,a mouvement regressors dataframe, a DM and statistical maps will be generated and saved
         for condition_file in [i for i in os.listdir(subj_path) if str_analgesia in i or str_hyper in i ]: #controls for each runs
@@ -67,9 +67,9 @@ def compute_DM(subj_path,timestamps_root_path,tr, save = None, runs = True):
             #-------compute DM-------
             design_matrix, fmri_time_series = create_DM(subj_volumes, timestamps, DM_name, df_mvmnt_reg, subj_name, tr)
             #-------append--------
-            design_matrices.append(design_matrix)
+            design_matrices.append(pd.DataFrame(design_matrix))
             all_fmri_timeseries.append(fmri_time_series)
-            conditions.append(condition)
+            conditions_ls.append(condition)
             DM_names.append(DM_name)
 
         #-----Save-----
@@ -82,12 +82,13 @@ def compute_DM(subj_path,timestamps_root_path,tr, save = None, runs = True):
 
             for i in range(len(design_matrices)): #will save all the element in the design matrix, timeseries and conditions lists
                 design_matrix = design_matrices[i]
-                design_matrix.to_csv(os.path.join(subj_path_save,DM_names[i]), index = False)
-
+                #design_matrix.to_csv(os.path.join(subj_path_save,DM_names[i]), index = False)
+                np.save(os.path.join(subj_path_save,DM_names[i]),design_matrix)
                 fmri_time_series = all_fmri_timeseries[i]
-                fmri_img_name = subj_name + '_' + conditions[i] + '_fmri_time_series.nii.gz'
+                fmri_img_name = subj_name + '_' + conditions_ls[i] + '_fmri_time_series.nii.gz'
                 nib.save(fmri_time_series, os.path.join(subj_path_save,fmri_img_name))
 
+    conditions = '_'.join([str(n) for n in conditions_ls])
     return design_matrices, all_fmri_timeseries, conditions
 
 
