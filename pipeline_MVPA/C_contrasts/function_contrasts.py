@@ -23,7 +23,7 @@ from nilearn.plotting import plot_design_matrix
 ######################
 
 #-----------------------------
-def glm_contrast_1event(design_matrices,all_runs_fmri_img, dir_to_save, subj_name, run_name = None)::
+def glm_contrast_1event(design_matrices,all_runs_fmri_img, dir_to_save, subj_name, run_name = None):
 
     #====================
     #Function that takes a design matrix, a path to save, a subject name, a run_name name and a 4D nii file to conpute contrast
@@ -40,6 +40,7 @@ def glm_contrast_1event(design_matrices,all_runs_fmri_img, dir_to_save, subj_nam
         #If not specified, no run string will be included in the saved contrast name
 
     all_runs_fmri_img_name = subj_name + '_concat_fmri.nii'
+
     #-------Model--------
     print('==============')
     print('COMPUTING GLM for subject ' + subj_name)
@@ -49,7 +50,9 @@ def glm_contrast_1event(design_matrices,all_runs_fmri_img, dir_to_save, subj_nam
                                hrf_model='spm',
                                drift_model='cosine',
                                high_pass=.00233645)
+
     fmri_glm = fmri_glm.fit(all_runs_fmri_img, design_matrices = design_matrices)
+
     #==============
     #identity matrix having shape of number of regressor x number of regressor in the Design matrix
     #Each column will serve to encode a 1 in a specifi columns of interest
@@ -61,7 +64,7 @@ def glm_contrast_1event(design_matrices,all_runs_fmri_img, dir_to_save, subj_nam
 
     none_contrasts = dict([(column, null_matrix[i])
       for i, column in enumerate(design_matrices[0].columns)])
-
+    print('none_contrasts', none_contrasts)
     contrast_vector = np.zeros(((design_matrices[0].shape)[1]))#ones will be added to this vector as we specify which regressor we want to contrast
 
     #list of all the regressors/keys to keep track of the regressors we've added to contrast
@@ -82,8 +85,9 @@ def glm_contrast_1event(design_matrices,all_runs_fmri_img, dir_to_save, subj_nam
             if string_interest in keys:#if the keys contains the word 'shock'
                 actual_key_name = key_list[indx]
                 ls_keys.append(keys)#keep track of the regressors for which contrast has been done
-                contrast_vector += identity_matrix[:, indx] #sum of the contrast vector with the identity matrix column to stack the ones
+                #contrast_vector += identity_matrix[:, indx] #sum of the contrast vector with the identity matrix column to stack the ones
                                                             #in the contrast vector for all regressors of interest
+                contrast_vector = identity_matrix[:, indx]
                 #--------computing contrast---------
                 print('==============')
                 print('COMPUTING CONTRAST')
@@ -105,8 +109,7 @@ def glm_contrast_1event(design_matrices,all_runs_fmri_img, dir_to_save, subj_nam
                     nib.save(beta_map, contrast_path)
 
                 if run_name != None:
-                    print(run_name,type(run_name))
-                    name_to_save = 'beta_map_' + subj_name + '_' + run_name + '_all_shocks'
+                    name_to_save = 'beta_map_' + subj_name + '_' + run_name + actual_key_name
                     contrast_path = os.path.join(subj_result_path, name_to_save)
                     nib.save(beta_map, contrast_path)
                 print('Have saved beta_map as a : {} , having shape : {} , under name : {}'.format(type(beta_map),beta_map.shape, name_to_save))
@@ -161,7 +164,7 @@ def glm_contrast_N_shocks(design_matrices,all_runs_fmri_img, dir_to_save, subj_n
         #if the key is str, in order to exclude the drifts and other parameters
         if type(keys) is str:
             string_interest1 = 'N_'
-            string_interest = 'shock'
+            string_interest2 = 'shock'
 
             if string_interest1 in keys and string_interest2 in keys:
                 actual_key_name = key_list[indx]
@@ -294,10 +297,3 @@ def glm_contrast_all_shocks(design_matrices,all_runs_fmri_img, dir_to_save, subj
     print('Have saved beta_map as a : {} , having shape : {} , under name : {}'.format(type(beta_map),beta_map.shape, name_to_save))
 
     return beta_map,contrast_path
-
-#-----------------
-def save_done_file(file_path, done_file_name):
-    done_file=open(os.path.join(file_path,done_file_name), 'w')
-    done_file.write('')
-    done_file.close()
-    print('HAVE WRITTEN : ' + done_file_name)

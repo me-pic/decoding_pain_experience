@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import nibabel as nib
 import glob
+import pickle
 from nilearn.glm.first_level import make_first_level_design_matrix
 from nilearn.image import concat_imgs, mean_img
 
@@ -71,7 +72,9 @@ def compute_DM(subj_path,timestamps_root_path,tr, save = None, runs = True):
             all_fmri_timeseries.append(fmri_time_series)
             conditions_ls.append(condition)
             DM_names.append(DM_name)
+            print('IN COMPUTE DM PRINTS : ', design_matrices[0].shape)
 
+            print(fmri_time_series.shape, design_matrix.shape)
         #-----Save-----
         if save != None:
             subj_path_save = os.path.join(save,subj_name)
@@ -83,7 +86,8 @@ def compute_DM(subj_path,timestamps_root_path,tr, save = None, runs = True):
             for i in range(len(design_matrices)): #will save all the element in the design matrix, timeseries and conditions lists
                 design_matrix = design_matrices[i]
                 #design_matrix.to_csv(os.path.join(subj_path_save,DM_names[i]), index = False)
-                np.save(os.path.join(subj_path_save,DM_names[i]),design_matrix)
+                #np.save(os.path.join(subj_path_save,DM_names[i]),design_matrix)
+                design_matrix.to_pickle(os.path.join(subj_path_save,DM_names[i]))
                 fmri_time_series = all_fmri_timeseries[i]
                 fmri_img_name = subj_name + '_' + conditions_ls[i] + '_fmri_time_series.nii.gz'
                 nib.save(fmri_time_series, os.path.join(subj_path_save,fmri_img_name))
@@ -117,7 +121,7 @@ def create_DM(subject_data, timestamps, DM_name, df_mvmnt_reg, subj_name, tr, sa
 
     n_scans = len(subject_data)
     frame_times = np.arange(n_scans) * tr
-
+    print(timestamps)
     design_matrix = make_first_level_design_matrix(
                 frame_times,
                 timestamps,
@@ -133,18 +137,16 @@ def create_DM(subject_data, timestamps, DM_name, df_mvmnt_reg, subj_name, tr, sa
     print('SHAPE OF DESIGN MATRIX : {} '.format(design_matrix.shape))
 
     #--------plot option--------
-    #from nilearn.plotting import plot_design_matrix
-    #plot_design_matrix(design_matrix)
-    #import matplotlib.pyplot as plt
-    #plt.show()
+    from nilearn.plotting import plot_design_matrix
+    plot_design_matrix(design_matrix)
+    import matplotlib.pyplot as plt
+    plt.show()
 
     return design_matrix, fmri_time_series
 
-##############################################33
+############################################
 #TO FIX with module
 ############################################
-
-
 
 import numpy as np
 import os
@@ -334,7 +336,7 @@ def split_reg_upper(matrix_to_split, target_lenght):
 def split_reg_lower(matrix_to_split, target_lenght):
 
     #funciton qui split une matrice (matrix_to_split) selon le nombre de volumes qu'on donne en argument (target_lenght)
-    #-------------Fonction description----------
+    #-------------Function description----------
 
     #function that takes a matrix and split it horizontally at the index given as argument (target_lenght). Returns the **LOWER** part
     #of where the matrix was split.
@@ -359,11 +361,11 @@ def if_str_in_file(condition_file,subj_name):
 #defining design matrix name and mouvement regessors according to condition
     if str_analgesia in condition_file:
         condition = 'HYPO'
-        DM_name = 'DM_HYPO_' + subj_name + '.csv' #Initializing the name under which the design matrix will be saved
+        DM_name = 'DM_HYPO_' + subj_name + '.pkl' #'.csv' #Initializing the name under which the design matrix will be saved
 
     else:
         condition = 'HYPER'
-        DM_name = 'DM_HYPER_' + subj_name + '.csv'
+        DM_name = 'DM_HYPER_' + subj_name + '.pkl' #.csv'
 
     return condition,DM_name
 
@@ -373,3 +375,12 @@ def check_if_empty(dir):
         ls = os.listdir(os.path.join(dir,folder))
         if len(ls) == 0:
             raise
+
+def load_pkl_to_pd(ls_pkl_paths):
+    #--load design matrices from pkl to pandas-----
+    ls_pandas = []
+    for i in range(len(ls_pkl_paths)):
+        tmp = pd.read_pickle(ls_pkl_paths[i])
+        ls_pandas.append(tmp)
+
+    return ls_pandas

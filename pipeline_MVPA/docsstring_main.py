@@ -7,7 +7,9 @@
     contrast_type : Type of contrast to compute. Choices=['all_shocks','each_shocks','suggestions']. By default None.
     parser : True by default. If False, parser.args will be overlooked and user will be able to manually provide the necessary arguments while calling main().
     compute_DM : True by default but if False, a path to the design matrices and the concatenated fmri timeseries is expected.
-
+    dir_to_save_DM : Path where the design matrices and fmri timeseries will be saved. Only taken into account if compute_DM = True.
+    ####second_level : Bool., by default True.
+        Runs a second level GLM
     ---------------
 
 
