@@ -71,8 +71,10 @@ def main(root_dir = None, timestamps_path = None, dir_to_save= None, contrast_ty
             paths_design_matrices = glob.glob(os.path.join(compute_DM, subj_name,'DM*csv'))#assuming that the design matrix has DM in its filename
             #design_matrices = B_design_matrix.load_pkl_to_pd(paths_design_matrices)
             print(paths_design_matrices)
-            design_matrices = pd.read_csv(paths_design_matrices[0],index_col = 1)
+            design_matrices = pd.read_csv(paths_design_matrices[0],index_col = [0])
+            print(design_matrices)
             print(design_matrices.shape)
+
 
             fmri_time_series = glob.glob(os.path.join(compute_DM, subj_name, '*fmri*'))#assuming that the 4D timeseries contains fmri in its name
             conditions = 'hyper_hypo'
@@ -103,19 +105,18 @@ def main(root_dir = None, timestamps_path = None, dir_to_save= None, contrast_ty
             contrast_paths.append(contrast_path)
         print('contrast_paths lenght : ', len(contrast_paths))
 
-    #==============================================================
+
     #Second level analysis
 
 #main path to data, change according to environment
-root_dir = r'E:\Users\Dylan\Desktop\UdeM_H22\E_PSY3008\data_desmartaux\Nii_test'
-timestamps_root_path = r'E:\Users\Dylan\Desktop\UdeM_H22\E_PSY3008\data_desmartaux\SPM_multiple_condition_files_TxT'
-#root_dir = r'/data/rainville/dylan_projet_ivado_decodage/Nii'
-# dir_to_save = r'/data/rainville/dylan_projet_ivado_decodage/results_GLM'
-#timestamps_root_path = r'C:\Users\Dylan\Desktop\UM_Bsc_neurocog\UM_H22\PSY3008\times_stamps'
-#root_dir = r'/data/rainville/dylan_projet_ivado_decodage/Nii'
-dir_to_save = r'C:\Users\Dylan\Desktop\UM_Bsc_neurocog\E22\Projet_Ivado_rainvillelab\results_GLM\SPM_DM_single_event_csv'
-#timestamps_root_path = r'/data/rainville/dylan_projet_ivado_decodage/time_stamps'
-# compute_DM = r'/data/rainville/dylan_projet_ivado_decodage/results_GLM/DM_timeseries'
-compute_DM = r'C:\Users\Dylan\Desktop\UM_Bsc_neurocog\E22\Projet_Ivado_rainvillelab\results_GLM\SPM_DM_single_event_all_runs'
+#root_dir = r'E:\Users\Dylan\Desktop\UdeM_H22\E_PSY3008\data_desmartaux\Nii_test'
+#timestamps_root_path = r'E:\Users\Dylan\Desktop\UdeM_H22\E_PSY3008\data_desmartaux\SPM_multiple_condition_files_TxT'
+#dir_to_save = r'C:\Users\Dylan\Desktop\UM_Bsc_neurocog\E22\Projet_Ivado_rainvillelab\results_GLM\SPM_DM_single_event_csv'
+#compute_DM = r'C:\Users\Dylan\Desktop\UM_Bsc_neurocog\E22\Projet_Ivado_rainvillelab\results_GLM\SPM_DM_single_event_all_runs'
 
+#elm
+root_dir = r'/data/rainville/dylan_projet_ivado_decodage/Nii'
+dir_to_save = r'/data/rainville/dylan_projet_ivado_decodage/results_GLM/'
+#timestamps_root_path = r'C:\Users\Dylan\Desktop\UM_Bsc_neurocog\UM_H22\PSY3008\times_stamps'
+compute_DM = r'/data/rainville/dylan_projet_ivado_decodage/results_GLM/SPM_DM_single_event_all_runs'
 main(dir_to_save= dir_to_save,compute_DM = compute_DM, contrast_type = 'neut_shocks')

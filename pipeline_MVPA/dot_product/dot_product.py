@@ -17,8 +17,8 @@ def dot(path_to_img, path_output, to_dot_with = 'nps', conditions = None, resamp
     path_output : string 
         path to save the ouput of the function (i.e., dot product and related file)
     to_dot_with : string, default = 'nps'
-         signature or fmri images to apply on the data, the maks,e.g. NPS. The paths to the signature files are defined inside the function. Can also be a list of paths to images.
-         In the case of a list, each image will be
+         signature or fmri images to apply on the data, the maks,e.g. NPS. The paths to the signature files are defined inside the function.
+         Can also be a *list* of paths to images.
     conditions : string, default = None
         name of the experimental condition
     img_format : string, default = '.nii'
@@ -35,7 +35,7 @@ def dot(path_to_img, path_output, to_dot_with = 'nps', conditions = None, resamp
     #---------Define signature path-----
 
     if to_dot_with == "nps":
-        mask_path = r"C:\Users\Dylan\Desktop\UM_Bsc_neurocog\UM_E22\Projet_Ivado_rainvillelab\NPS_wager_lab\NPS_share\weights_NSF_grouppred_cvpcr.hdr"
+        mask_path = r"C:\Users\Dylan\Desktop\UM_Bsc_neurocog\E22\Projet_Ivado_rainvillelab\NPS_wager_lab\NPS_share\weights_NSF_grouppred_cvpcr.hdr"
     if to_dot_with == "siips":
         mask_path = "nonnoc_v11_4_137subjmap_weighted_mean.nii"
     if to_dot_with == "vps":
@@ -53,6 +53,8 @@ def dot(path_to_img, path_output, to_dot_with = 'nps', conditions = None, resamp
         fmri_imgs = glob.glob(os.path.join(path_to_img,'*',img_format)) #e.g : path/*all_subjects'_folders/*.nii
     else:
         fmri_imgs = glob.glob(os.path.join(path_to_img,img_format)) #e.g : path/*.nii
+        #fmri_imgs = glob.glob(os.path.join(path,'*','*.nii'))
+
 
     #fmri_imgs = list(filter(lambda x: "hdr" in x, data_path))
     fmri_imgs.sort(reverse=True)
@@ -131,7 +133,7 @@ def dot(path_to_img, path_output, to_dot_with = 'nps', conditions = None, resamp
         print('---------------------------')
         #dot product of the image's masker with the mask(NPS)'s masker
         dot_res = np.dot(masker_tmp,masker_NPS.T)
-
+        print(dot_res)
         #storing the result in array
         dot_array = np.append(dot_array,dot_res)
         masks_names.append(mask_name)
@@ -172,12 +174,14 @@ if __name__ == "__main__":
 
 
 #example
-path_to_img = r'C:\Users\Dylan\Desktop\UM_Bsc_neurocog\UM_E22\Projet_Ivado_rainvillelab\results_GLM\neut_shocks'
-path_output = r'C:\Users\Dylan\Desktop\UM_Bsc_neurocog\UM_E22\Projet_Ivado_rainvillelab\pipeline_MVPA\dot_product'
-path_jeni = r'C:\Users\Dylan\Desktop\UM_Bsc_neurocog\UM_E22\Projet_Ivado_rainvillelab\results_GLM\099_TxT_Individual_N-SHOCKS_files'
-ls_neut_shocks = glob.glob(os.path.join(path_jeni,'*.hdr'))#have to give a list of images and not the path
-dot(path_to_img= path_to_img, path_output=path_output, to_dot_with=ls_neut_shocks,conditions = 'neutShocks_py',participant_folder=True)
+path_to_img = r'C:\Users\Dylan\Desktop\UM_Bsc_neurocog\E22\Projet_Ivado_rainvillelab\results_GLM\neut_shocks'
+path_output = r'C:\Users\Dylan\Desktop\UM_Bsc_neurocog\E22\Projet_Ivado_rainvillelab\pipeline_MVPA\dot_product'
+path_jeni = r'C:\Users\Dylan\Desktop\UM_Bsc_neurocog\E22\Projet_Ivado_rainvillelab\results_GLM\099_TxT_Individual_N-SHOCKS_files'
+#ls_neut_shocks = glob.glob(os.path.join(path_jeni,'*.hdr'))#have to give a list of images and not the path
+#dot(path_to_img= path_to_img, path_output=path_output, to_dot_with=ls_neut_shocks,conditions = 'neutShocks_py',participant_folder=True)
+imgs_jeni = glob.glob(os.path.join(path_jeni,'*.hdr'))
 
+dot(path_to_img= path_to_img, path_output=path_output, to_dot_with=imgs_jeni,conditions = 'neutShocks_py',participant_folder=True)
 
 
 

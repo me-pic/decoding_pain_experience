@@ -159,15 +159,15 @@ def glm_contrast_N_shocks(design_matrices,all_runs_fmri_img, dir_to_save, subj_n
     fmri_glm = fmri_glm.fit(all_runs_fmri_img, design_matrices = design_matrices)
     print('has fit')
     #==============
-    identity_matrix = np.eye((design_matrices[0].shape)[1],(design_matrices[0].shape)[1])
-    null_matrix = np.zeros(design_matrices[0].shape)
+    identity_matrix = np.eye((design_matrices.shape)[1],(design_matrices.shape)[1])
+    null_matrix = np.zeros(design_matrices.shape)
     #print(null_matrix.shape), print('NULL MATRIX')
 
     none_contrasts = dict([(column, null_matrix[i])
-      for i, column in enumerate(design_matrices[0].columns)])
+      for i, column in enumerate(design_matrices.columns)])
     #print('NONE CONTRAST  {}'.format(none_contrasts))
     #print('lenght of NONE CONTRAST  {}'.format(len(none_contrasts)))
-    contrast_vector = np.zeros(((design_matrices[0].shape)[1]))#ones will be added to this vector as we specify which regressor we want to contrast
+    contrast_vector = np.zeros(((design_matrices.shape)[1]))#ones will be added to this vector as we specify which regressor we want to contrast
 
     #list of all the regressors/keys to keep track of the regressors we've added to contrast
     ls_keys = []
