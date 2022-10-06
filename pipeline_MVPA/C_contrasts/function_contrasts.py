@@ -23,8 +23,8 @@ from nilearn.plotting import plot_design_matrix
 ######################
 
 #-----------------------------
-def glm_contrast_1event(design_matrices,all_runs_fmri_img, dir_to_save, subj_name, run_name = None):
-
+def glm_contrast_1event(design_matrices,all_runs_fmri_img, dir_to_save, subj_name, run_name = None, output_type = 'effect_size'):
+    """
     #====================
     #Function that takes a design matrix, a path to save, a subject name, a run_name name and a 4D nii file to conpute contrast
     #This function is supposed to be used in a loop over many subject file. Therefor, it has as arguments a path to save, a subject's
@@ -38,6 +38,9 @@ def glm_contrast_1event(design_matrices,all_runs_fmri_img, dir_to_save, subj_nam
     #fmri_img : a 4D nii file containing data
     #run_name : *optionnal. A string containing the name of the actual run that will eb added to the name of the saved contrast file.
         #If not specified, no run string will be included in the saved contrast name
+    output_type : String, default = 'effect_size' i.e. beta
+        Argument (named output_type) to insert in fmri_glm.compute_contrast function.
+    """
 
     all_runs_fmri_img_name = subj_name + '_concat_fmri.nii'
 
@@ -48,7 +51,7 @@ def glm_contrast_1event(design_matrices,all_runs_fmri_img, dir_to_save, subj_nam
                                noise_model='ar1',
                                standardize=False,
                                hrf_model='spm',
-                               drift_model='cosine',
+                               slice_time_ref = 1,
                                high_pass=.00233645)
 
     fmri_glm = fmri_glm.fit(all_runs_fmri_img, design_matrices = design_matrices)
@@ -94,7 +97,7 @@ def glm_contrast_1event(design_matrices,all_runs_fmri_img, dir_to_save, subj_nam
                 print('With the CONTRAST VECTOR : {} '.format(contrast_vector))
                 print('For the Neutral shocks of both runs')
                 beta_map = fmri_glm.compute_contrast(
-                     contrast_vector, output_type='effect_size')#compute the contrasts with contrast vector
+                     contrast_vector, output_type=output_type)#compute the contrasts with contrast vector
 
                 #---------Plot option----------
                 #plotting.plot_stat_map(
@@ -117,8 +120,8 @@ def glm_contrast_1event(design_matrices,all_runs_fmri_img, dir_to_save, subj_nam
     return beta_map,contrast_path
 
 #--------------------------
-def glm_contrast_N_shocks(design_matrices,all_runs_fmri_img, dir_to_save, subj_name, run_name = None):
-
+def glm_contrast_N_shocks(design_matrices,all_runs_fmri_img, dir_to_save, subj_name, run_name = None, output_type = 'effect_size'):
+    """
     #====================
     #Function that takes a design matrix, a path to save, a subject name, a run_name name and a 4D nii file to conpute contrast
     #This function is supposed to be used in a loop over many subject file. Therefor, it has as arguments a path to save, a subject's
@@ -132,18 +135,29 @@ def glm_contrast_N_shocks(design_matrices,all_runs_fmri_img, dir_to_save, subj_n
     #fmri_img : a 4D nii file containing data
     #run_name : *optionnal. A string containing the name of the actual run that will eb added to the name of the saved contrast file.
         #If not specified, no run string will be included in the saved contrast name
+    output_type : String, default = 'effect_size' i.e. beta
+        Argument (named output_type) to insert in fmri_glm.compute_contrast function.
+    """
+
+    from nilearn.plotting import plot_design_matrix
+    plot_design_matrix(design_matrices)
+    import matplotlib.pyplot as plt
+    plt.show()
 
     all_runs_fmri_img_name = subj_name + '_concat_fmri.nii'
     #-------Model--------
     print('==============')
     print('COMPUTING GLM for subject ' + subj_name)
-    fmri_glm = FirstLevelModel(t_r=3, #ok
+    fmri_glm = FirstLevelModel(t_r=3,
                                noise_model='ar1',
                                standardize=False,
+                               slice_time_ref = 0.5,
                                hrf_model='spm',
                                drift_model='cosine',
-                               high_pass=.00233645)
+                               high_pass= 0.00233645)
+
     fmri_glm = fmri_glm.fit(all_runs_fmri_img, design_matrices = design_matrices)
+    print('has fit')
     #==============
     identity_matrix = np.eye((design_matrices[0].shape)[1],(design_matrices[0].shape)[1])
     null_matrix = np.zeros(design_matrices[0].shape)
@@ -176,9 +190,8 @@ def glm_contrast_N_shocks(design_matrices,all_runs_fmri_img, dir_to_save, subj_n
     print('==============')
     print('COMPUTING CONTRAST')
     print('With the CONTRAST VECTOR : {} '.format(contrast_vector))
-    beta_map = fmri_glm.compute_contrast(
-         contrast_vector, output_type='effect_size')#compute the contrasts with contrast vector
-
+    beta_map = fmri_glm.compute_contrast(contrast_vector, stat_type = 't', output_type= output_type)#compute the contrasts with contrast vector
+    print('has done contrast')
      #---------Plot option----------
     #plotting.plot_stat_map(
     #    beta_map, threshold=3.0, display_mode='z',
@@ -207,8 +220,8 @@ def glm_contrast_N_shocks(design_matrices,all_runs_fmri_img, dir_to_save, subj_n
     return beta_map,contrast_path
 
 #-----------------------------
-def glm_contrast_all_shocks(design_matrices,all_runs_fmri_img, dir_to_save, subj_name, run_name = None):
-
+def glm_contrast_all_shocks(design_matrices,all_runs_fmri_img, dir_to_save, subj_name, run_name = None, output_type = 'effect_size'):
+    """
     #====================
     #Function that takes a design matrix, a path to save, a subject name, a run_name name and a 4D nii file to conpute contrast
     #This function is supposed to be used in a loop over many subject file. Therefor, it has as arguments a path to save, a subject's
@@ -222,7 +235,9 @@ def glm_contrast_all_shocks(design_matrices,all_runs_fmri_img, dir_to_save, subj
     #fmri_img : a 4D nii file containing data
     #run_name : *optionnal. A string containing the name of the actual run that will eb added to the name of the saved contrast file.
         #If not specified, no run string will be included in the saved contrast name
-
+    output_type : String, default = 'effect_size' i.e. beta
+        Argument (named output_type) to insert in fmri_glm.compute_contrast function.
+    """
     all_runs_fmri_img_name = subj_name + '_concat_fmri.nii'
     #-------Model--------
     print('==============')
@@ -268,7 +283,7 @@ def glm_contrast_all_shocks(design_matrices,all_runs_fmri_img, dir_to_save, subj
     print('COMPUTING CONTRAST')
     print('With the CONTRAST VECTOR : {} '.format(contrast_vector))
     beta_map = fmri_glm.compute_contrast(
-         contrast_vector, output_type='z_score')#compute the contrasts with contrast vector
+         contrast_vector, output_type= output_type)#compute the contrasts with contrast vector
 
      #---------Plot option----------
     #plotting.plot_stat_map(

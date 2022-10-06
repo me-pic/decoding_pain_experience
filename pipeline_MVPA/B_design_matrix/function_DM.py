@@ -65,16 +65,17 @@ def compute_DM(subj_path,timestamps_root_path,tr, save = None, runs = True):
             elif condition == 'HYPER':
                 df_mvmnt_reg = split_reg_lower(df_mvmnt_reg_full,len(subj_volumes)) #splitting either the first half or lower half of the mvmnt regressor df according to condition (analg/hyper)
 
-            #-------compute DM-------
+            #-------compute DM and extract fmri timeseries-------
             design_matrix, fmri_time_series = create_DM(subj_volumes, timestamps, DM_name, df_mvmnt_reg, subj_name, tr)
+
+            fmri_time_series = concat_imgs(subj_volumes)
+
             #-------append--------
-            design_matrices.append(pd.DataFrame(design_matrix))
+            #design_matrices.append(pd.DataFrame(design_matrix))
             all_fmri_timeseries.append(fmri_time_series)
             conditions_ls.append(condition)
             DM_names.append(DM_name)
-            print('IN COMPUTE DM PRINTS : ', design_matrices[0].shape)
 
-            print(fmri_time_series.shape, design_matrix.shape)
         #-----Save-----
         if save != None:
             subj_path_save = os.path.join(save,subj_name)
@@ -89,12 +90,11 @@ def compute_DM(subj_path,timestamps_root_path,tr, save = None, runs = True):
                 #np.save(os.path.join(subj_path_save,DM_names[i]),design_matrix)
                 design_matrix.to_pickle(os.path.join(subj_path_save,DM_names[i]))
                 fmri_time_series = all_fmri_timeseries[i]
-                fmri_img_name = subj_name + '_' + conditions_ls[i] + '_fmri_time_series.nii.gz'
+                fmri_img_name = subj_name + '_' + conditions_ls[i] + '_fmri_time_series.nii'
                 nib.save(fmri_time_series, os.path.join(subj_path_save,fmri_img_name))
 
     conditions = '_'.join([str(n) for n in conditions_ls])
-    return design_matrices, all_fmri_timeseries, conditions
-
+    return  design_matrices, all_fmri_timeseries, conditions
 
 def create_DM(subject_data, timestamps, DM_name, df_mvmnt_reg, subj_name, tr, save = None):
 
@@ -106,7 +106,7 @@ def create_DM(subject_data, timestamps, DM_name, df_mvmnt_reg, subj_name, tr, sa
     """
     print('COMPUTING design matrix under name : ' + DM_name)
 
-    fmri_time_series = concat_imgs(subject_data)#Extraction of subject'volumes (4D nii file)
+    fmri_time_series = concat_imgs(subject_data) #Extraction of subject'volumes (4D nii file)
     #////////////TIMESTAMPS////////////////
     if type(timestamps) is str:
 
@@ -127,7 +127,7 @@ def create_DM(subject_data, timestamps, DM_name, df_mvmnt_reg, subj_name, tr, sa
                 timestamps,
                 hrf_model='spm',
                 drift_model='cosine',
-                high_pass=.00233645,
+                high_pass= 0.00233645,
                 add_regs = df_mvmnt_reg) #array of shape(n_frames, n_add_reg)
 
     #--------Prints for info--------
@@ -259,8 +259,8 @@ def get_timestamps(data_path, subj_name, timestamps_path_root, return_df=None):
             else:
                 timestamps_path = os.path.join(timestamps_path_root, r'ASTREFF_Model6_TxT_model3_multicon_APM20_HYPER.xlsx')
 
-            #timestamps HYPER pour les sujets normaux dans H2
-        else :#For all other subjects
+            #timestamps HYPER for all other subjects H2
+        else :
             if return_df:
                 timestamps = scipy.io.loadmat(os.path.join(timestamps_path_root,r'ASTREFF_Model6_TxT_model3_multicon_HYPER.mat'),simplify_cells =True)#.mat option
             else :
@@ -310,6 +310,7 @@ def get_timestamps(data_path, subj_name, timestamps_path_root, return_df=None):
         return df_timestamps
     #else return the path
     else:
+
         return timestamps_path
 
 
@@ -354,7 +355,6 @@ def split_reg_lower(matrix_to_split, target_lenght):
     return split_matrix
 
 def if_str_in_file(condition_file,subj_name):
-
 
     str_analgesia ='Analgesia'
     str_hyper = 'Hyperalgesia'
