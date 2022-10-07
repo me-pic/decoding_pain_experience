@@ -245,19 +245,18 @@ def glm_contrast_all_shocks(design_matrices,all_runs_fmri_img, dir_to_save, subj
     fmri_glm = FirstLevelModel(t_r=3, #ok
                                noise_model='ar1',
                                standardize=False,
+                               slice_time_ref = 0.5,
                                hrf_model='spm',
                                drift_model='cosine',
                                high_pass=.00233645)
     fmri_glm = fmri_glm.fit(all_runs_fmri_img, design_matrices = design_matrices)
     #==============
-    identity_matrix = np.eye((design_matrices[0].shape)[1],(design_matrices[0].shape)[1])
-    null_matrix = np.zeros(design_matrices[0].shape)
+    identity_matrix = np.eye((design_matrices.shape)[1],(design_matrices.shape)[1])
+    null_matrix = np.zeros(design_matrices.shape)
     #print(null_matrix.shape), print('NULL MATRIX')
 
     none_contrasts = dict([(column, null_matrix[i])
-      for i, column in enumerate(design_matrices[0].columns)])
-    #print('NONE CONTRAST  {}'.format(none_contrasts))
-    #print('lenght of NONE CONTRAST  {}'.format(len(none_contrasts)))
+      for i, column in enumerate(design_matrices.columns)])
     contrast_vector = np.zeros(((design_matrices[0].shape)[1]))#ones will be added to this vector as we specify which regressor we want to contrast
 
     #list of all the regressors/keys to keep track of the regressors we've added to contrast
@@ -283,7 +282,7 @@ def glm_contrast_all_shocks(design_matrices,all_runs_fmri_img, dir_to_save, subj
     print('COMPUTING CONTRAST')
     print('With the CONTRAST VECTOR : {} '.format(contrast_vector))
     beta_map = fmri_glm.compute_contrast(
-         contrast_vector, output_type= output_type)#compute the contrasts with contrast vector
+         contrast_vector,  stat_type = 't',output_type= output_type)#compute the contrasts with contrast vector
 
      #---------Plot option----------
     #plotting.plot_stat_map(
@@ -305,7 +304,6 @@ def glm_contrast_all_shocks(design_matrices,all_runs_fmri_img, dir_to_save, subj
         nib.save(beta_map, contrast_path)
 
     if run_name != None:
-        print(run_name,type(run_name))
         name_to_save = 'beta_map_' + subj_name + '_' + run_name + '_all_shocks'
         contrast_path = os.path.join(subj_result_path, name_to_save)
         nib.save(beta_map, contrast_path)
