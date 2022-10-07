@@ -56,7 +56,7 @@ def main(root_dir = None, timestamps_path = None, dir_to_save= None, contrast_ty
 
     #---creating directory---
     if contrast_type != None: #make a result directory for the contrasts
-        path_contrast_results = os.path.join(dir_to_save,contrast_type) #creating a root dir to save all the contrast
+        path_contrast_results = os.path.join(dir_to_save,'glm_',contrast_type) #creating a root dir to save all the contrast
         if os.path.exists(path_contrast_results) is False:
             os.mkdir(path_contrast_results)
         print(path_contrast_results)
