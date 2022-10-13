@@ -56,7 +56,7 @@ def main(root_dir = None, timestamps_path = None, dir_to_save= None, contrast_ty
 
     #---creating directory---
     if contrast_type != None: #make a result directory for the contrasts
-        path_contrast_results = os.path.join(dir_to_save,'glm_',contrast_type) #creating a root dir to save all the contrast
+        path_contrast_results = os.path.join(dir_to_save,contrast_type) #creating a root dir to save all the contrast
         if os.path.exists(path_contrast_results) is False:
             os.mkdir(path_contrast_results)
         print(path_contrast_results)
@@ -71,7 +71,8 @@ def main(root_dir = None, timestamps_path = None, dir_to_save= None, contrast_ty
             paths_design_matrices = glob.glob(os.path.join(compute_DM, subj_name,'DM*csv'))#assuming that the design matrix has DM in its filename
             #design_matrices = B_design_matrix.load_pkl_to_pd(paths_design_matrices)
             print(paths_design_matrices)
-            design_matrices = pd.read_csv(paths_design_matrices[0],index_col = [0])
+            design_matrices_raw_events = pd.read_csv(paths_design_matrices[0],index_col = [0])
+            design_matrices = contrast.change_events_name(design_matrices_raw_events,'shocks')
             print(design_matrices)
             print(design_matrices.shape)
 
@@ -119,4 +120,5 @@ root_dir = r'/data/rainville/dylan_projet_ivado_decodage/Nii'
 dir_to_save = r'/data/rainville/dylan_projet_ivado_decodage/results_GLM/'
 #timestamps_root_path = r'C:\Users\Dylan\Desktop\UM_Bsc_neurocog\UM_H22\PSY3008\times_stamps'
 compute_DM = r'/data/rainville/dylan_projet_ivado_decodage/results_GLM/SPM_DM_single_event_all_runs'
-main(dir_to_save= dir_to_save,compute_DM = compute_DM, contrast_type = 'neut_shocks')
+main(dir_to_save= dir_to_save,compute_DM = compute_DM, contrast_type = 'each_shocks')
+

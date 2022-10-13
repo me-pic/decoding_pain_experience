@@ -47,12 +47,14 @@ def glm_contrast_1event(design_matrices,all_runs_fmri_img, dir_to_save, subj_nam
     #-------Model--------
     print('==============')
     print('COMPUTING GLM for subject ' + subj_name)
-    fmri_glm = FirstLevelModel(t_r=3, #ok
+
+    fmri_glm = FirstLevelModel(t_r=3,
                                noise_model='ar1',
                                standardize=False,
+                               slice_time_ref = 0.5,
                                hrf_model='spm',
-                               slice_time_ref = 1,
-                               high_pass=.00233645)
+                               drift_model='cosine',
+                               high_pass= 0.00233645)
 
     fmri_glm = fmri_glm.fit(all_runs_fmri_img, design_matrices = design_matrices)
 
@@ -62,13 +64,12 @@ def glm_contrast_1event(design_matrices,all_runs_fmri_img, dir_to_save, subj_nam
     #none contrast is a dictionnary having design matrix column name as key name. The values of each
     #vector is a 'number of regressor'(design_matrix.shape[1]) long.
     #the vector in each key is 0 or 1 and serve to encode the contrast in further steps
-    identity_matrix = np.eye((design_matrices[0].shape)[1],(design_matrices[0].shape)[1])
-    null_matrix = np.zeros(design_matrices[0].shape)
+    identity_matrix = np.eye((design_matrices.shape)[1],(design_matrices.shape)[1])
+    null_matrix = np.zeros(design_matrices.shape)
 
     none_contrasts = dict([(column, null_matrix[i])
-      for i, column in enumerate(design_matrices[0].columns)])
-    print('none_contrasts', none_contrasts)
-    contrast_vector = np.zeros(((design_matrices[0].shape)[1]))#ones will be added to this vector as we specify which regressor we want to contrast
+      for i, column in enumerate(design_matrices.columns)])
+    contrast_vector = np.zeros(((design_matrices.shape)[1]))#ones will be added to this vector as we specify which regressor we want to contrast
 
     #list of all the regressors/keys to keep track of the regressors we've added to contrast
     ls_keys = []
@@ -85,7 +86,7 @@ def glm_contrast_1event(design_matrices,all_runs_fmri_img, dir_to_save, subj_nam
         if type(keys) is str:
             string_interest = 'shock' #In this case every key that has the string 'shock' will be attributed a 1 in that column
 
-            if string_interest in keys:#if the keys contains the word 'shock'
+            if string_interest in keys:
                 actual_key_name = key_list[indx]
                 ls_keys.append(keys)#keep track of the regressors for which contrast has been done
                 #contrast_vector += identity_matrix[:, indx] #sum of the contrast vector with the identity matrix column to stack the ones
@@ -95,9 +96,8 @@ def glm_contrast_1event(design_matrices,all_runs_fmri_img, dir_to_save, subj_nam
                 print('==============')
                 print('COMPUTING CONTRAST')
                 print('With the CONTRAST VECTOR : {} '.format(contrast_vector))
-                print('For the Neutral shocks of both runs')
                 beta_map = fmri_glm.compute_contrast(
-                     contrast_vector, output_type=output_type)#compute the contrasts with contrast vector
+                     contrast_vector,stat_type = 't', output_type=output_type)#compute the contrasts with contrast vector
 
                 #---------Plot option----------
                 #plotting.plot_stat_map(
@@ -310,3 +310,13 @@ def glm_contrast_all_shocks(design_matrices,all_runs_fmri_img, dir_to_save, subj
     print('Have saved beta_map as a : {} , having shape : {} , under name : {}'.format(type(beta_map),beta_map.shape, name_to_save))
 
     return beta_map,contrast_path
+
+
+def change_events_name(matrix,str_to_keep):
+
+    for col in matrix.columns:
+        if str_to_keep in col:
+            new_col = col[6:-6]
+            matrix.rename(columns = {col:new_col}, inplace = True)
+
+    return matrix
