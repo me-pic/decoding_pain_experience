@@ -176,7 +176,7 @@ if __name__ == "__main__":
 #example
 path_to_img = r'C:\Users\Dylan\Desktop\UM_Bsc_neurocog\E22\Projet_Ivado_rainvillelab\results_GLM\all_shocks'
 path_output = r'C:\Users\Dylan\Desktop\UM_Bsc_neurocog\E22\Projet_Ivado_rainvillelab\pipeline_MVPA\dot_product'
-path_jeni = r'C:\Users\Dylan\Desktop\UM_Bsc_neurocog\E22\Projet_Ivado_rainvillelab\results_GLM\099_TxT_Individual_N-SHOCKS_files'
+#path_jeni = r'C:\Users\Dylan\Desktop\UM_Bsc_neurocog\E22\Projet_Ivado_rainvillelab\results_GLM\099_TxT_Individual_N-SHOCKS_files'
 #ls_neut_shocks = glob.glob(os.path.join(path_jeni,'*.hdr'))#have to give a list of images and not the path
 #dot(path_to_img= path_to_img, path_output=path_output, to_dot_with=ls_neut_shocks,conditions = 'neutShocks_py',participant_folder=True)
 imgs_jeni = glob.glob(os.path.join(path_jeni,'*.hdr'))
