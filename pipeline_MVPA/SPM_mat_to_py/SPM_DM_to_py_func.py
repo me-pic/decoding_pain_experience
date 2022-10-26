@@ -24,14 +24,14 @@ def copy_folder_struct(origin_path, dir_copy):#creates folder in out_dir replica
 
             os.mkdir(os.path.join(dir_copy,folder))
 
-#copy_folder_struct(origin_path = r'E:\Users\Dylan\Desktop\UdeM_H22\E_PSY3008\data_desmartaux\Nii', dir_copy = r'C:\Users\Dylan\Desktop\UM_Bsc_neurocog\E22\Projet_Ivado_rainvillelab\results_GLM\SPM_DM_single_event_csv')
+#copy_folder_struct(origin_path = r'C:\Users\Dylan\Desktop\UM_Bsc_neurocog\E22\Projet_Ivado_rainvillelab\results_GLM\neut_shocks', dir_copy = r'C:\Users\Dylan\Desktop\UM_Bsc_neurocog\E22\Projet_Ivado_rainvillelab\results_GLM\SPM_DM_single_event_all_runs')
 
 def change_events_name(matrix,str_to_keep):
 
     for col in matrix.columns:
-    if str_to_keep in col:
-        new_col = col[6:-6]
-        matrix.rename(columns = {col:new_col}, inplace = True)
+        if str_to_keep in col:
+            new_col = col[6:-6]
+            matrix.rename(columns = {col:new_col}, inplace = True)
 
     return matrix
 
@@ -59,11 +59,14 @@ def SPM_DM_to_py(SPM_files_path, out_dir):
         #SPM dm and event extraction
         subj_path = os.path.join(SPM_files_path,subject)
         events = (pd.read_csv(os.path.join(subj_path, os.listdir(subj_path)[1]))) #read event, should change [index] according to folder
+        print(events)
         #change events names
         changed_events = change_events_name(events,'shocks')
+        print(changed_events)
+
         design_matrix= pd.DataFrame(pd.read_csv(os.path.join(subj_path, os.listdir(subj_path)[0]),header=None))#read DM.csv
         design_matrix.columns = changed_events.columns
-    
+        print(design_matrix.columns)
         #extract and concat fmri data files
         #subj_data_path = os.path.join(nii_path,subject)
         #subj_volumes = glob.glob(os.path.join(subj_data_path,'*','sw*')) #change the prefix 'sw*' according to .nii file names
@@ -72,7 +75,7 @@ def SPM_DM_to_py(SPM_files_path, out_dir):
         print(design_matrix.shape)
         #save
         DM_name = 'DM_SPM_Hyper_Hypo.csv'
-        design_matrix.to_csv(os.path.join(out_dir,subject, DM_name))
+        #design_matrix.to_csv(os.path.join(out_dir,subject, DM_name))
         fmri_name = 'fmri_4D_concat_all_runs'
         #nib.save(fmri_time_series, os.path.join(save_path,subject,fmri_name))
         print('done saving for ' + subject)
@@ -80,6 +83,6 @@ def SPM_DM_to_py(SPM_files_path, out_dir):
  
 #calling function
 SPM_dir = r'C:\Users\Dylan\Desktop\UM_Bsc_neurocog\E22\Projet_Ivado_rainvillelab\results_GLM\SPM_DM_single_event_csv'
-out = r'C:\Users\Dylan\Desktop\UM_Bsc_neurocog\E22\Projet_Ivado_rainvillelab\results_GLM\TEST_size_DM'
+out = r'C:\Users\Dylan\Desktop\UM_Bsc_neurocog\E22\Projet_Ivado_rainvillelab\results_GLM\SPM_DM_single_event_all_runs'
 
 SPM_DM_to_py(SPM_dir, out)

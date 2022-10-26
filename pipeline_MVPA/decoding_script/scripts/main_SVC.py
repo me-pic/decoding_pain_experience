@@ -9,9 +9,9 @@ from sklearn.svm import SVR, SVC
 from sklearn.model_selection import train_test_split, GroupShuffleSplit, ShuffleSplit, permutation_test_score
 import building_model
 
-def main_ML(data_input):
+def main_svc(data_input):
 
-    path, dirs, files = next(os.walk(filesInput))
+    path, dirs, files = next(os.walk(data_input))
     #want to return a list of all the nii file from different folders
     data =[]
     gr = []
@@ -110,10 +110,9 @@ def main_ML(data_input):
       #      np.savez(filename, X_train=X_train[i],Y_train=y_train[i],X_test=X_test[i],y_test=y_test[i],y_pred=y_pred[i])
 
 
-filesInput = r'/data/rainville/dylan_projet_ivado_decodage/results_GLM/each_shock'
-#filesInput = r'C:\Users\Dylan\Desktop\UdeM_E22\Projet_Ivado_rainvillelab\results_GLM\GLM_each_shock'
-
-main_ML(filesInput)
+#filesInput = r'/data/rainville/dylan_projet_ivado_decodage/results_GLM/each_shock'
+filesInput = r'C:\Users\Dylan\Desktop\UM_Bsc_neurocog\E22\Projet_Ivado_rainvillelab\results_GLM\test_res_GLM\each_shocks'
+main_svc(filesInput)
 
 
 
