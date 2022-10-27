@@ -6,7 +6,7 @@ from sklearn.decomposition import PCA
 from sklearn.linear_model import Lasso, Ridge
 from sklearn.svm import SVR, SVC
 from sklearn.model_selection import train_test_split, GroupShuffleSplit, ShuffleSplit, permutation_test_score
-from sklearn.metrics import roc_auc_score, accuracy_score, precision_score
+from sklearn.metrics import roc_auc_score, accuracy_score, balanced_accuracy_score, top_k_accuracy_score, precision_score
 
 
 def split_data(X,Y,group,procedure):
@@ -82,20 +82,23 @@ def compute_metrics(y_test, y_pred, df, fold, print_verbose):
     """  
 
     accuracy = accuracy_score(list(y_test), list(y_pred))
+    balanced_accuracy = balanced_accuracy_score(list(y_test),list(y_pred))
+    top_k_accuracy_score = top_k_accuracy_score(list(y_test),list(y_pred))
     precision = precision_score(list(y_test), list(y_pred),average = 'macro')
-    #roc_auc_ovr = roc_auc_score(list(y_test), list(round_y_pred), multi_class = 'ovo')
-    #roc_auc_ovo = roc_auc_score(list(y_test), list(round_y_pred), multi_class = 'ovo')
+    roc_auc_ovo = roc_auc_score(list(y_test), list(y_pred), multi_class = 'ovo')
+
+
     print(accuracy,precision)
     print(df)
 
 
-    df.loc[fold] = [accuracy, precision]
+    df.loc[fold] = [accuracy, balanced_accuracy, precision, ]
     print(df, 'df')
     if print_verbose:
         print('------Metrics for fold {}------'.format(fold))
         print('accuracy value = {}'.format(accuracy))
         print('precision value = {}'.format(precision))
-        #print('roc_auc_ovr value = {}'.format(roc_auc_ovr))
+        print('roc_auc_ovr value = {}'.format(roc_auc_ovr))
         #print('roc_auc_ovo value = {}'.format(roc_auc_ovo))
         print('\n')
 
@@ -138,8 +141,7 @@ def train_test_classify(X_train, Y_train, gr, C=1.0,splits=5,test_size=0.3, n_co
     y_pred = []
     model = []
     model_voxel = []
-    accuracy = []
-    df_metrics = pd.DataFrame(columns=["accuracy", "precision"])
+    accuracy = []    df_metrics = pd.DataFrame(columns=["accuracy", "precision"])
     splits=5
     test_size=0.3
     n_components=0.80
@@ -167,17 +169,22 @@ def train_test_classify(X_train, Y_train, gr, C=1.0,splits=5,test_size=0.3, n_co
         print(x_train[i].shape, y_train[i].shape)
         model.append(model_clf.fit(x_train[i], list(y_train[i])))
 
-        ###Scores###
-
+        # Scores
         y_pred.append(model[i].predict(x_test[i]))
+
+        # decision_function
+        decision_func = model.decision_function(x_test)
 
         #accuracy.append(accuracy_score(list(y_test[i]), list(y_pred[i])))
         fold_df_metrics = compute_metrics(y_test[i], y_pred[i], df_metrics, i, print_verbose)
+        print(fold_df_metrics)
+
+
         df_metrics.loc[i] = [fold_df_metrics['accuracy'],fold_df_metrics['precision']]
         #model_voxel.append(model[i].inverse_transform(model[i].coef_))
 
     df_metrics.to_csv("dataframe_metrics.csv")
-    return x_train, y_train, x_test, y_test, y_pred, model, df_metrics
+    return x_train, y_train, x_test, y_test, y_pred, models, df_metrics
 
 
 def compute_permutation(X, y, gr, reg, n_components=0.80, n_permutations=5000, scoring="r2", random_seed=42):

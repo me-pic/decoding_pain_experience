@@ -4,9 +4,9 @@ import glob
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 import prepping_data
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection #import train_test_split
 from sklearn.svm import SVR, SVC
-from sklearn.model_selection import train_test_split, GroupShuffleSplit, ShuffleSplit, permutation_test_score
+from sklearn.model_selection import GroupShuffleSplit, ShuffleSplit, permutation_test_score
 import building_model
 
 def main_svc(data_input):
@@ -35,7 +35,7 @@ def main_svc(data_input):
         df_target.loc[index, 'filename'] = filename #add file to index
 
         #digit and condition col
-        print(filename, ': filename')
+        # print(filename, ': filename')
         if 'HYPO' in filename:
             if '_N_' in filename:
                 target = 1 #hypo neutral
@@ -60,6 +60,9 @@ def main_svc(data_input):
         index += 1
     df_target['group'] = gr
     Y = np.array(df_target['target'])#.reshape(y.shape[0:])
+    print('Y')
+    print(Y)
+    print(Y.shape)
     #X
     #------masker------
     #extract_X is a 72 x 216 000 voxels structure. It will serve as X
@@ -71,7 +74,7 @@ def main_svc(data_input):
     X = stand_X.T
     check = np.isnan(X)
     print('check if NaN : ', np.isnan(np.min(X)), 'X SHAPE : ', X.shape)
-    X_train, X_test, Y_train, Y_test = train_test_split(X,Y, test_size=0.30, random_state=42)
+    X_train, X_test, Y_train, Y_test = model_selection.train_test_split(X,Y, test_size=0.30, random_state=42)
     #split the group vector according to the split of X and Y
     split_gr = gr[:len(Y_train)]
     print(X_train.shape,Y_train.shape, X_test.shape, Y_test.shape)
@@ -79,23 +82,29 @@ def main_svc(data_input):
     #K_FOLD MODELS
     y_pred = []
     model = []
-    accuracy = []
+    ls_accuracy = []
     shuffle_method = GroupShuffleSplit(n_splits = 5, test_size = 0.3, random_state = 33)
     model_clf = SVC(kernel="linear",class_weight='balanced')
-    x_train, y_train, x_test, y_test, y_pred, model, accuracy, metrics = building_model.train_test_classify(X_train,Y_train , split_gr)
+    x_train, y_train, x_test, y_test, y_pred, models, df_metrics = building_model.train_test_classify(X_train,Y_train , split_gr)
 
     #---------------
-    #FINAL MODELS
-    df_metrics = pd.DataFrame(columns=["accuracy", "precision"])
+    # FINAL MODELS
+    metrics_names = df_metrics.columns
+    print('metrics_names : ' + metrics_names)
+        # pd.DataFrame(columns=["accuracy", "precision", "roc_auc_ovo"])
     print(df_metrics, ' df_metrics')
+
     model = SVC(kernel="linear",class_weight='balanced')
     final_model = model.fit(X_train,list(Y_train))
     Y_pred = final_model.predict(X_test)
-    ###Scores### import building_model df_metrics =building_model.compute_metrics
+    ###Scores### import building_model
+    df_metrics = building_model.compute_metrics(y_test[i], y_pred[i], df_metrics,
+                                                 i, print_verbose)
+
     #  (Y_test, Y_pred, df_metrics, 'final', True)
-    #accuracy = accuracy_score(list(Y_test), list(Y_pred))
-    #print('accuracy ', df_metrics   )
-    #SAVE
+    # accuracy = accuracy_score(list(Y_test), list(Y_pred))
+
+
     contrast_counter = 1
     for element in final_model.coef_:
 
@@ -111,7 +120,8 @@ def main_svc(data_input):
 
 
 #filesInput = r'/data/rainville/dylan_projet_ivado_decodage/results_GLM/each_shock'
-filesInput = r'C:\Users\Dylan\Desktop\UM_Bsc_neurocog\E22\Projet_Ivado_rainvillelab\results_GLM\test_res_GLM\each_shocks'
+#filesInput = r'C:\Users\Dylan\Desktop\UM_Bsc_neurocog\E22\Projet_Ivado_rainvillelab\results_GLM\test_res_GLM\each_shocks'
+filesInput = r'C:\Users\Dylan\Desktop\UM_Bsc_neurocog\E22\Projet_Ivado_rainvillelab\results_GLM\test_res_GLM\GLM_each_shock_4sub'
 main_svc(filesInput)
 
 

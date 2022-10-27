@@ -1,2 +1,19 @@
+pipeline_SVC
+===========
+scipts
+------
+
 SPM_MAT_to_csv.m :To extract design matrices from the SPM.mat file in matlab and send it to too csv files (one design matrix and the other events names)
 SPM_DM_to_py.py : to merge the event names and numerical design matrix. It also concatenate the fmri nii files and saves it into the same folder
+
+src
+---
+
+main_GLM.py
+
+Results_GLM
+===========
+
+099_TxT_Individual_N-SHOCKS_files : SPM generated activation maps for all the neutral shocks. Used to dot product with the python-generated-neutral-shocks-activation-maps
+SPM_DM_timeseries : contains all the participants' folders with a combined-run design matrix and a timeseries of all the nii files for that participant
+SPM_DM_single_event_csv : contains all the participants' folders with an event csv (regerssors' names) and a numerical design matrix exported from the matlab generated SPM.mat file
