@@ -1,8 +1,9 @@
 import numpy as np
 import pandas as pd
 import nibabel as nib
+import os
 from nilearn.masking import apply_mask
-from nilearn.input_data import NiftiMasker
+from nilearn.maskers import NiftiMasker
 from nilearn.image import resample_img
 from sklearn.preprocessing import FunctionTransformer
 
@@ -51,7 +52,7 @@ def y_transformer(y, func = np.log1p):
     return df_y
 
 
-def extract_signal(data, mask="template", standardize = True):
+def extract_signal(data, mask="whole-brain-template", standardize = True):
     """
     Apply a mask to extract the signal from the data and save the mask
     in a html format
@@ -98,6 +99,45 @@ def extract_signal_from_mask(data, mask):
     affine = data[0].affine
     resample_mask = resample_img(mask,affine)
     signal = apply_mask(data, resample_mask, ensure_finite=True)
-    print(signal.shape, type(signal))
+    #print(signal.shape, type(signal))
 
     return signal
+
+def encode_classes(data, gr):
+
+    #Y data
+    y_colnames = ['filename', 'target', 'condition', 'group']
+    df_target = pd.DataFrame(columns = y_colnames)
+    index = 0
+    for file in data:
+
+            #filename col
+        filename = os.path.basename(os.path.normpath(file))#get file name from path
+        df_target.loc[index, 'filename'] = filename #add file to coord (index,'filnames')
+
+        # encoding classes associated with each file in data
+        if 'ANA' in filename:
+            if 'N_ANA' in filename:
+                target = 1 #hypo neutral
+                cond = 'N_HYPO'
+
+            else:#Hypo
+                target = 2
+                cond = 'HYPO'
+
+        else : #hyper
+            if 'N_HYPER' in filename:
+                target = 3
+                cond = 'N_HYPER'
+            else:
+                target = 4
+                cond = 'HYPER'
+            #print('attributed : ', target, 'as target and :', cond, 'as condition')
+            #print('-----------')
+        df_target.loc[index, 'target'] = target
+        df_target.loc[index, 'condition'] = cond
+
+        index += 1
+    df_target['group'] = gr
+
+    return df_target
