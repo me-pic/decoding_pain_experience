@@ -1,5 +1,5 @@
 # decoding_pain_experience
-Predict subjective pain experience with fMRI activity
+Decoding fMRI brain activity associated with pain modulation induced by verbal suggestions
 ---
 
 ### Project definition
