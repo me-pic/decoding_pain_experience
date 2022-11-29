@@ -79,6 +79,7 @@ There were four different type of verbal suggestion to modulate (or not for the 
 ![](images/confusion_matrix_finalSVC.png)
 
 * With the final model, all the coefficients were reprojected to the MNI space using `masker.inverse_transform()`. Since there were four classes, six different class comparisons can be made and the highest coefficient for each comparison are presented in the plots below. The highest peaks represents the brain regions that either when activated or deactivated (red or blue) had the highest preictive value of the class(type of suggestion). For example, when looking at the first plot, the activation of the dlPFC appears to be the most predictive to predict the Neut_HYPO vs HYPO class.
+
 ![](images/coeff1png.png)
 ![](images/coeff2.png)
 ![](images/coeff3.png)
