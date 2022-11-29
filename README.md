@@ -1,41 +1,6 @@
 # decoding_pain_experience
 Predict subjective pain experience with fMRI activity
 ---
-type: "project" # DON'T TOUCH THIS ! :)
-date: "2022-07-16" # Date you first upload your project.
-# Title of your project (we like creative title)
-title: "Decoding of painful stimuli using fMRI data"
-
-# List the names of the collaborators within the [ ]. If alone, simple put your name within []
-names: [Dylan Sutterlin-Guindon, Marie-Eve Picard, Jeni Chen, Mathieu Landry, Pierre Rainville]
-
-# Your project GitHub repository URL
-github_repo: https://github.com/brainhack-school2022/sutterlin_project
-
-# If you are working on a project that has website, indicate the full url including "https://" below or leave it empty.
-website:
-
-# List +- 4 keywords that best describe your project within []. Note that the project summary also involves a number of key words. Those are listed on top of the [github repository](https://github.com/brainhack-school2020/project_template), click `manage topics`.
-# Please only lowercase letters
-tags: [decoding, fMRI, pain, hypnosis, python]
-
-# Summarize your project in < ~75 words. This description will appear at the top of your page and on the list page with other projects..
-
-summary: "Painful experience involves a distributed pattern of brain activity. With hypnosis, it's possible to increase or decrease pain. This project aims to decode fMRI pain-evoked brain activity and identify pattern of activity that are associated with specific hypnotic conditions"
-
-# If you want to add a cover image (listpage and image in the right), add it to your directory and indicate the name
-# below with the extension.
-image: "brain-activity.webp"
----
-### Background
-#### personal background
-
-Link to Github page : <a href="https://github.com/dylansutterlin">
-   <br /><sub><b>Dylan Suttelrin-Guindon</b></sub>
-</a>
-
-Education :
-  * B.Sc. Neuroscience cognitive(fundamental research option)  from Université de Montréal
 
 ### Project definition
 
