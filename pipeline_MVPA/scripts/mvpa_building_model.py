@@ -111,7 +111,7 @@ def compute_metrics_y_pred(y_test, y_pred):
     return row_metrics, cm, cr
 
 
-def train_test_models(X_train, Y_train, gr, n_folds, C=1.0,test_size=0.3, n_components=0.80, random_seed=42, print_verbose=False):
+def train_test_models(X_train, Y_train, gr, n_folds, C=1.0,test_size=0.3, n_components_pca = 0.80, random_seed=42, print_verbose=False, binary = False):
     """
     Build and evaluate a classification model
 
@@ -163,11 +163,11 @@ def train_test_models(X_train, Y_train, gr, n_folds, C=1.0,test_size=0.3, n_comp
     # 'roc_auc_ovo'])
 
 
-    test_size=0.3
+
     #n_components=0.80
     #Strategy to split the data
     shuffle_method = GroupShuffleSplit(n_splits = n_folds, test_size = test_size, random_state = random_seed)
-
+    pca = PCA
     x_train, x_test, y_train, y_test = split_data(X_train, Y_train, gr, shuffle_method)
     #print('x_train {}   //and its shape {}'.format(x_train, x_train.shape))
     #print('x_test {}   //and its shape {}'.format(x_test, x_test.shape))
@@ -184,20 +184,25 @@ def train_test_models(X_train, Y_train, gr, n_folds, C=1.0,test_size=0.3, n_comp
 
 
     for i in range(n_folds):
+        n_components_pca = [0.80, 0.85, 0.90, 0.95, 1]
+        if n_components_pca[i] <1:
+            print('PCA with {} components'.format(n_components_pca[i]))
+            pca = PCA(n_components = n_components_pca[i])
+            x_train[i] = pca.fit_transform(x_train[i])
+            x_test[i] = pca.transform(x_test[i])
 
-        ###Build and test the model###
         print("----------------------------")
         print('Training model in fold{}'.format(i+1))
-        model_clf = SVC(C=C, kernel="linear",class_weight='balanced', probability = True)
+        model_clf = SVC(C=C, kernel="linear", probability = True)
         model_clf.fit(x_train[i], list(y_train[i]))
         models.append(model_clf) # save model in a list
-
+        print(x_train[i].shape)
+        print(x_test[i].shape)
         #print(x_train[i].shape, y_train[i].shape)
         #print(x_train[i].shape)
         #print(y_train[i].shape)
 
         # Metrics
-
         # y_pred
         y_pred.append(models[i].predict(x_test[i])) # prediction ith the test set
 
@@ -207,16 +212,17 @@ def train_test_models(X_train, Y_train, gr, n_folds, C=1.0,test_size=0.3, n_comp
         dict_decision_func['fold{}'.format(i+1)] = decision_func
 
         # y_score
-        #print('y_score')
-        y_score = model_clf.predict_proba(x_test[i])
-        #print('type y_score {} and its shape'.format(type(y_score),y_score.shape))
-        #print(y_score)
-
-        # ROC
+     	# ROC
         print('type of target list y test')
         print(type_of_target(list(y_test[i])))
         #y_test = y_test[i].astype(int)
-        roc_auc_ovo = roc_auc_score(list(y_test[i]), np.array(y_score) , multi_class = 'ovo')
+        if binary:
+            y_score = model_clf.predict_proba(x_test[i])[:, 1]
+            roc_auc_ovo = roc_auc_score(list(y_test[i]), np.array(y_score))
+        else:
+            y_score = model_clf.predict_proba(x_test[i])
+            roc_auc_ovo = roc_auc_score(list(y_test[i]), np.array(y_score), multi_class = 'ovo')
+
         ls_roc_auc_ovo.append(roc_auc_ovo)
         print('roc_auc_ovo :  {} and list of roc auc {}'.format(roc_auc_ovo,ls_roc_auc_ovo))
 
@@ -233,7 +239,7 @@ def train_test_models(X_train, Y_train, gr, n_folds, C=1.0,test_size=0.3, n_comp
 
     #df_metrics['roc_auc_ovo'] = ls_roc_auc_ovo
     print('df_metrics post ls_roc_auc_ovo :  {} '.format(df_metrics))
-    fold_results = dict(x_train = x_train, y_train = y_train, x_test = x_test, y_pred = y_pred, fold_models = models, df_fold_metrics = df_metrics,roc_auc_ovo = ls_roc_auc_ovo, confusion_matrix = dict_confusion, classification_report = dict_classif_report, decision_function = decision_func_df)
+    fold_results = dict(pca_n_components = n_components_pca, x_train = x_train, y_train = y_train, x_test = x_test, y_pred = y_pred, fold_models = models, df_fold_metrics = df_metrics,roc_auc_ovo = ls_roc_auc_ovo, confusion_matrix = dict_confusion, classification_report = dict_classif_report, decision_function = decision_func_df)
 
     #df_metrics.to_csv("dataframe_metrics.csv")
     return fold_results
@@ -282,3 +288,17 @@ def hot_split_Y_test(Y_test, n_classes):
         Y_test_wide[:,cl-1] = col
     return Y_test_wide
 
+
+def reg_PCA(n_component, clf = SVC()):
+    """
+    Parameters
+    ----------
+    n_component: number of components to keep in the PCA
+
+    Returns
+    ----------
+    pipe: pipeline to apply PCA and Lasso regression sequentially
+    """
+    estimators = [('reduce_dim', PCA(n_component)), ('clf', reg)]
+    pipe = Pipeline(estimators)
+    return pipe
