@@ -25,14 +25,14 @@ The tools used to accomplish this task are:
 ### Data
 
 The dataset that will be used comes from Desmartaux et al., 2021 and has restricted access. It includes 24 participants (13 women and 11 males) and mean age is 26.9. Subjects participated to a fMRI scanning session where they received hypnosis to either increase or decrease pain. After hypnotic suggestions to modulate pain,a serie of either 6 or 9 painful stimuli were administered. In total, each participant received 72 electrical shocks. Across all participants, a total of 1728 trials/shocks were done.
-![](protocole_desmartaux2021.png)
+![](images/protocole_desmartaux2021.png)
 
 ### Method
 
 A Support vector classifier from [sklearn documentation](https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html) was applied to 1726 statistical brain maps, each modeling the brain activation during a single painful shock. Those contrast maps were generated using a General Linear Model for which the code can be found [here](https://github.com/dylansutterlin/decoding_pain_experience). Those 1726 trials were used to predict the pain modulating condition administered prior to each shock.
 
 * Example of a statistical map :
-![](betamaps_07.png)
+![](images/betamaps_07.png)
 
 There were four different type of verbal suggestion to modulate (or not for the control sugestions) the pain experience. Hence, there were four classes to predict with the model. Those four classes are listed a the following :
 
@@ -79,12 +79,13 @@ There were four different type of verbal suggestion to modulate (or not for the 
 ![](images/confusion_matrix_finalSVC.png)
 
 * With the final model, all the coefficients were reprojected to the MNI space using `masker.inverse_transform()`. Since there were four classes, six different class comparisons can be made and the highest coefficient for each comparison are presented in the plots below. The highest peaks represents the brain regions that either when activated or deactivated (red or blue) had the highest preictive value of the class(type of suggestion). For example, when looking at the first plot, the activation of the dlPFC appears to be the most predictive to predict the Neut_HYPO vs HYPO class.
-![](coeff1png.png)
-![](coeff2.png)
-![](coeff3.png)
-![](coeff4.png)
-![](coeff5.png)
-![](coef6.png)
+
+![](images/coeff1png.png)
+![](images/coeff2.png)
+![](images/coeff3.png)
+![](images/coeff4.png)
+![](images/coeff5.png)
+![](images/coef6.png)
 
 ## Conclusion
 
