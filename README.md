@@ -105,4 +105,6 @@ Franz, M., Schmidt, B., Hecht, H., Naumann, E., & Miltner, W. H. R. (2021). Sugg
 
 Hofbauer, R. K., Rainville, P., Duncan, G. H., & Bushnell, M. C. (2001). Cortical Representation of the Sensory Dimension of Pain. Journal of Neurophysiology, 86(1), 402 411. https://doi.org/10.1152/jn.2001.86.1.402
 
-Jiang, H., White, M. P., Greicius, M. D., Waelde, L. C., & Spiegel, D. (2017). Brain Activity and Functional Connectivity Associated with Hypnosis. Cerebral Cortex (New York, N.Y.: 1991), 27(8), 4083 4093. https://doi.org/10.1093/cercor/bhw220
+Jiang, H., White, M. P., Greicius, M. D., Waelde, L. C., & Spiegel, D. (2017). Brain Activity and Functional Connectivity Associated with Hypnosis. Cerebral Cortex (New York, N.Y.: 1991), 27(8), 4083 4093. https://doi.org/10.1093/cercor/bhw220   
+
+
