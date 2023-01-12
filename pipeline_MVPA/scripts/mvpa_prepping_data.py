@@ -181,3 +181,76 @@ def encode_bin_classes(data, gr):
     df_target['group'] = gr
 
     return df_target
+
+
+def encode_runs_as_classes(data, gr):
+
+    #Y data
+    y_colnames = ['filename', 'target', 'condition', 'group']
+    df_target = pd.DataFrame(columns = y_colnames)
+    index = 0
+    for file in data:
+
+            #filename col
+        filename = os.path.basename(os.path.normpath(file))#get file name from path
+        df_target.loc[index, 'filename'] = filename #add file to coord (index,'filnames')
+
+        # encoding classes associated with each file in data
+        if 'ANA' in filename:
+            if 'N_ANA' in filename:
+                target = 1 #hypo neutral
+                cond = 'Neutral'
+
+            else:#Hypo
+                target = 1
+                cond = 'Modulation'
+
+        else : #hyper
+            if 'N_HYPER' in filename:
+                target = 2
+                cond = 'Neutral'
+            else:
+                target = 2
+                cond = 'Modulation'
+            #print('attributed : ', target, 'as target and :', cond, 'as condition')
+            #print('-----------')
+        df_target.loc[index, 'target'] = target
+        df_target.loc[index, 'condition'] = cond
+
+        index += 1
+    df_target['group'] = gr
+
+    return df_target
+
+
+def train_test_iso_split(data,X, Y, train_samp, random_state = 30):
+    '''
+    provided a list of conditions, e.g. ['ANA', 'N_ANA'] as train_samp, this function will return X_train and Y_train exclusively composed
+    of the conditions in train_samp. It will also return X_test and Y_test arrays composed of the remaining conditions in 'data'. This 
+    function should be used if you want to train on a isolation of the data and test on the other. Note that the conditions in train_samp
+    need to be comprised in the filenames in 'data'
+    '''
+    X_train = []
+    Y_train = []
+    X_test = []
+    Y_test = []
+    y_train_gr_idx = []
+    idx = np.arange(0, X.shape[0], 1, dtype=int)
+    count = 0
+    for file,train_idx,test_idx in zip(data,idx,idx):
+        print(X.shape)
+        print(file)
+        print(train_idx)
+        print(test_idx)
+
+        res = [ele for ele in train_samp if (ele in file)] # Bool result of wether the file contains at least one condition from train_samp
+        if res:
+            X_train.append(X[train_idx])
+            Y_train.append(Y[train_idx])
+            y_train_gr_idx.append(test_idx)
+        else : # 'ANA' or 'N_ANA' in file
+            X_test.append(X[test_idx])
+            Y_test.append(Y[test_idx])
+        #print(X_train, X_test, Y_train, Y_test)
+
+    return np.array(X_train), np.array(X_test), np.array(Y_train), np.array(Y_test), np.array(y_train_gr_idx)

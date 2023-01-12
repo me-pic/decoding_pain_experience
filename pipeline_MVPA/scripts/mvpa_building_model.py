@@ -162,8 +162,6 @@ def train_test_models(X_train, Y_train, gr, n_folds, C=1.0,test_size=0.3, n_comp
     #'precision_recall_curve', 'average_precision_score',
     # 'roc_auc_ovo'])
 
-
-
     #n_components=0.80
     #Strategy to split the data
     shuffle_method = GroupShuffleSplit(n_splits = n_folds, test_size = test_size, random_state = random_seed)
