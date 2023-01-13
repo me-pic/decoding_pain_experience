@@ -1,31 +1,60 @@
 import numpy as np
 import pandas as pd
 import nibabel as nib
+import glob
 import os
 from nilearn.masking import apply_mask
 from nilearn.maskers import NiftiMasker
 from nilearn.image import resample_img
 from sklearn.preprocessing import FunctionTransformer
 
-def hdr_to_Nifti(files):
-    """
-    Convert hdr files to Nifti-like objects
+def extract_data(data_input, extract_str = 'beta*'):
+    '''
+    Function that returns a list containing the paths of all the files in data_input, even its subfolder based
+    on the filter extract_str.
 
-    Parameters
-    ----------
-    files: list of paths to each hdr file
+    arguments
+    ---------
+    data_input : Str. ; Path to all the file data
+    extract_str : Str. ; Will select only the file that satisfies the wildcard
+    '''
+    path, dirs, files = next(os.walk(data_input))
+    #want to return a list of all the nii file from different folders
+    print(path, dirs, files)
+    data =[]
+    gr = []
+    group_indx = 1
+    for dir in dirs:
+        tmp_folder = glob.glob(os.path.join(path,dir, extract_str))
+        for item in tmp_folder:
+            data.append(item)
+            gr.append(group_indx)#gr reflects which path or trial is associated with each participant (1 to n participants)
+        group_indx += 1
 
-    Returns
-    ----------
-    array: array of Nifti-like objects
-    """
-    array = []
-    for element in files:
-        array = np.append(array, nib.load(element))
+    return data, gr
 
-    print('array size: ', array.shape, '\narray type: ', type(array))
 
-    return array 
+def keep_sub_data(data, gr, sub_data):
+    '''
+    Function to keep a part only of the data and leave the rest unused. E.g. to build a model only on specific condition.
+
+    arguments
+    ---------
+    data : List ; list containing the paths of all the files
+    sub_data : List or str. ; List of string that are comprised in filenames. The filenames containing those str. will be kept
+    '''
+    filt_data = []
+    new_gr = []
+    idx = 0
+    for img in data:
+        res = [ele for ele in sub_data if (ele in img)] #checks if element 'ele' of the sub_data list is in the img's filename
+        if res:
+        # if res if not empty, meaning that img path contain an element in sub_data, e.g. 'ANA' or 'N_ANA'
+            filt_data.append(img)
+            new_gr.append(gr[idx])
+        idx += 1
+
+    return filt_data, new_gr
 
 
 def y_transformer(y, func = np.log1p):
@@ -139,11 +168,21 @@ def encode_classes(data, gr):
 
         index += 1
     df_target['group'] = gr
+    cond_target = ['1 = N_ANA', '2 = HYPO', '3 = N_HYPER', '4 = HYPER']
 
-    return df_target
+    return df_target, cond_target
 
 
-def encode_bin_classes(data, gr):
+def encode_manip_classes(data, gr):
+    '''
+    Function to encode encode binary classes based on experimental manipulation. It is designed to encode the experimental condition or modulation (1) and
+    the neutral condition (2) based on substring in fMRI images' filename
+    argument
+    Return a dataframe with Y info and cond_target which is a list of strings of what condition is attributed to each target
+    --------
+    data : List; List containing all the path to fMRI activation maps
+    gr : List; List of int. to keep tract of all the files that are from the same participant. e.g. [1,1,1,1,1,1,1,2,2,2,2,2,2,2,2...]
+    '''
 
     #Y data
     y_colnames = ['filename', 'target', 'condition', 'group']
@@ -179,8 +218,9 @@ def encode_bin_classes(data, gr):
 
         index += 1
     df_target['group'] = gr
+    cond_target = ['1 = HYPO/HYPER', '2 = Neutrals']
 
-    return df_target
+    return df_target, cond_target
 
 
 def encode_runs_as_classes(data, gr):
@@ -219,13 +259,14 @@ def encode_runs_as_classes(data, gr):
 
         index += 1
     df_target['group'] = gr
+    cond_target = ['1 = HYPO_run', '2 = HYPER_run']
 
-    return df_target
+    return df_target, cond_target
 
 
 def train_test_iso_split(data,X, Y, train_samp, random_state = 30):
     '''
-    provided a list of conditions, e.g. ['ANA', 'N_ANA'] as train_samp, this function will return X_train and Y_train exclusively composed
+    provided a list of conditions, e.g. ['ANA', 'N_ANA'] as training sample 'train_samp', this function will return X_train and Y_train exclusively composed
     of the conditions in train_samp. It will also return X_test and Y_test arrays composed of the remaining conditions in 'data'. This 
     function should be used if you want to train on a isolation of the data and test on the other. Note that the conditions in train_samp
     need to be comprised in the filenames in 'data'
