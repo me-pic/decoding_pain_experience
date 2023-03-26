@@ -45,8 +45,7 @@ def main(root_dir = None, timestamps_path = None, dir_to_save= None, contrast_ty
         parser.add_argument('--contrast_type', type=str, choices=['all_shocks','each_shocks','suggestions'], default='all_shocks')
         args = parser.parse_args()
 
-    #==============================================================
-    if root_dir != None:
+    if root_dir != None: # if no root directory is provided, it's expected to receive a path to design matrices as 'compute_DM'
         ls_subj_name = [subject for subject in os.listdir(root_dir)]
         ls_subj_path  = glob.glob(os.path.join(root_dir,'*'))
     else:
@@ -60,25 +59,18 @@ def main(root_dir = None, timestamps_path = None, dir_to_save= None, contrast_ty
         if os.path.exists(path_contrast_results) is False:
             os.mkdir(path_contrast_results)
         print(path_contrast_results)
-    #-----main loop-----
+    # Main loop
     for subj_path in ls_subj_path:
         subj_name = os.path.basename(os.path.normpath(subj_path))
         print('At : ' + subj_name)
 
-        #-----get design matrix and timeseries------
+        # Get design matrix and timeseries
         if compute_DM != True:
-
             paths_design_matrices = glob.glob(os.path.join(compute_DM, subj_name,'DM*csv'))#assuming that the design matrix has DM in its filename
             #design_matrices = DM.load_pkl_to_pd(paths_design_matrices)
-            print(paths_design_matrices)
             design_matrices = pd.read_csv(paths_design_matrices[0],index_col = [0])
-            print(design_matrices)
-            print(design_matrices.shape)
-
-
-            fmri_time_series = glob.glob(os.path.join(compute_DM, subj_name, '*fmri*'))#assuming that the 4D timeseries contains fmri in its name
+            fmri_time_series = glob.glob(os.path.join(compute_DM, subj_name, '*fmri*'))#assuming that the 4D timeseries contains 'fmri' in its name
             conditions = 'hyper_hypo'
-
         else:
             DM.check_if_empty(root_dir)
             save_DM = os.path.join(dir_to_save,'DM_timeseries')

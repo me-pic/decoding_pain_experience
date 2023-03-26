@@ -1,14 +1,35 @@
 
 import os
 import numpy as np
+import pickle
 import nibabel as nib
 import pandas as pd
-from nilearn.input_data import NiftiMasker
+from nilearn.maskers import NiftiMasker
 from nilearn import image
 import glob
 
+def keep_sub_data(data, sub_data):
+    '''
+    Function to keep a part only of the data and leave the rest unused. E.g. to build a model only on specific condition.
 
-def dot(path_to_img, path_output, to_dot_with = 'nps', conditions = None, resample_to_mask=True, img_format = '*.nii',participant_folder = True):
+    arguments
+    ---------
+    data : List ; list containing the paths of all the files
+    sub_data : List or str. ; List of string that are comprised in filenames. The filenames containing those str. will be kept
+    '''
+    filt_data = []
+    idx = 0
+    for img in data:
+        res = [ele for ele in sub_data if (ele in img)] #checks if element 'ele' of the sub_data list is in the img's filename
+        if res:
+        # if res if not empty, meaning that img path contain an element in sub_data, e.g. 'ANA' or 'N_ANA'
+            filt_data.append(img)
+        idx += 1
+
+    return filt_data
+
+
+def dot(path_to_img, path_output, to_dot_with = 'nps', dot_id = None, resample_to_mask=True, img_format = '*.nii',participant_folder = True, filter_data = False):
     """
     Parameters
     ----------
@@ -19,23 +40,26 @@ def dot(path_to_img, path_output, to_dot_with = 'nps', conditions = None, resamp
     to_dot_with : string, default = 'nps'
          signature or fmri images to apply on the data, the maks,e.g. NPS. The paths to the signature files are defined inside the function.
          Can also be a *list* of paths to images.
-    conditions : string, default = None
-        name of the experimental condition
+    dot_id : string, default = None
+        name of the experimental condition or id to include in output filename
     img_format : string, default = '.nii'
         change according to the format of fmri images, e.g. '*.hdr' or '*.img'
     participant_folder : string, default = True
-        If True, it's assumed that the path_to_img contains a folder for each participant that contain the fMRI image(s) that will be used to compute dot product. If False,
+        If True, it's assumed that the path_to_img contains a folder for each participant that contain the fMRI image(s) that will be used to compute smt product. If False,
         it is assumed that all the images that will be used to compute dot product are directly in path_to_img
+    filter_data : Bool. or list; False by default, if not False, it is exêcted that a list od string is given as arg. This will filter the data used for
+                    dot product based on the string present in the filename. E.g. 'filename1','filename2' filter_data = ['2'], will noly keep filename2 for dot
     Returns
     -------
     dot_array : numpy array
     subj_array : list
     """
-
-    #---------Define signature path-----
+    pwd = os.getcwd()
+    print(pwd)
+    #Define signature path
 
     if to_dot_with == "nps":
-        mask_path = r"/signatures/weights_NSF_grouppred_cvpcr.hdr"
+        mask_path = os.path.join(pwd,r"signatures/weights_NSF_grouppred_cvpcr.hdr")
     if to_dot_with == "siips":
         mask_path = "nonnoc_v11_4_137subjmap_weighted_mean.nii"
     if to_dot_with == "vps":
@@ -54,6 +78,9 @@ def dot(path_to_img, path_output, to_dot_with = 'nps', conditions = None, resamp
     else:
         fmri_imgs = glob.glob(os.path.join(path_to_img,img_format)) #e.g : path/*.nii
         #fmri_imgs = glob.glob(os.path.join(path,'*','*.nii'))
+
+    if filter_data:
+        fmri_imgs = list(keep_sub_data(fmri_imgs, filter_data))
 
 
     #fmri_imgs = list(filter(lambda x: "hdr" in x, data_path))
@@ -143,25 +170,25 @@ def dot(path_to_img, path_output, to_dot_with = 'nps', conditions = None, resamp
     if type(to_dot_with) is list:
         to_dot_with = 'aslist'
 
-    if conditions == None:
+    if dot_id == None:
         df_res = pd.concat([pd.DataFrame(dot_array.T, columns = [f'dot_results_{resamp}_{to_dot_with}']),
             pd.DataFrame(subj_array, columns = ['files']),
             pd.DataFrame(masks_names, columns = ['masks'])],axis=1)
         if path_output is False: # if no output path have been entered, e.i. = False, results will be saved as pickle in pwd
-            with open(f'results_{resamp}_{to_dot_with}.pickle', 'wb') as handle:
+            with open(f'dot_{resamp}_{to_dot_with}.pickle', 'wb') as handle:
                 pickle.dump(df_res, handle, protocol=pickle.HIGHEST_PROTOCOL)
         else:
             df_res.to_csv(os.path.join(path_output,f'results_{resamp}_{to_dot_with}.csv'))
 
     else:
-        df_res = pd.concat([pd.DataFrame(dot_array.T, columns = [f'dot_results_{resamp}_{to_dot_with}_{conditions}']),
+        df_res = pd.concat([pd.DataFrame(dot_array.T, columns = [f'dot_results_{resamp}_{to_dot_with}_{dot_id}']),
             pd.DataFrame(subj_array, columns = ['files']),
             pd.DataFrame(masks_names, columns = ['masks'])], axis=1)
         if path_output is False:
-            with open(f'results_{resamp}_{to_dot_with}_{conditions}.pickle', 'wb') as handle:
+            with open(f'results_{resamp}_{to_dot_with}_{dot_id}.pickle', 'wb') as handle:
                 pickle.dump(df_res, handle, protocol=pickle.HIGHEST_PROTOCOL)
         else:
-            df_res.to_csv(os.path.join(path_output,f'results_{resamp}_{to_dot_with}_{conditions}.csv'))
+            df_res.to_csv(os.path.join(path_output,f'results_{resamp}_{to_dot_with}_{dot_id}.csv'))
 
     return dot_array,subj_array,
 
@@ -183,14 +210,14 @@ if __name__ == "__main__":
 
 
 #example
-path_to_img = '/home/p1226014/projects/def-rainvilp/p1226014/pain_decoding/results/glm/each_shocks'
-path_output = r'C:\Users\Dylan\Desktop\UM_Bsc_neurocog\E22\Projet_Ivado_rainvillelab\pipeline_MVPA\dot_product'
+path_to_img = r'C:\Users\Dylan\Desktop\UM_Bsc_neurocog\E22\Projet_Ivado_rainvillelab\results\results_GLM\all_shocks'
+path_output = r'C:\Users\Dylan\Desktop\UM_Bsc_neurocog\E22\Projet_Ivado_rainvillelab\dot_product'
+
+#path_output = r'/data/rainville/dylan_projet_ivado_decodage/results/dot/each_shock'
 #path_jeni = r'C:\Users\Dylan\Desktop\UM_Bsc_neurocog\E22\Projet_Ivado_rainvillelab\results_GLM\099_TxT_Individual_N-SHOCKS_files'
 #ls_neut_shocks = glob.glob(os.path.join(path_jeni,'*.hdr'))#have to give a list of images and not the path
-#dot(path_to_img= path_to_img, path_output=path_output, to_dot_with=ls_neut_shocks,conditions = 'neutShocks_py',participant_folder=True)
+#dot(path_to_img= path_to_img, path_output=path_output, to_dot_with=ls_neut_shocks,dot_id = 'neutShocks_py',participant_folder=True)
 #imgs_jeni = glob.glob(os.path.join(path_jeni,'*.hdr'))
 
-dot(path_to_img= path_to_img, path_output=False, to_dot_with='nps',conditions = 'each_shock_py',participant_folder=True)
-
-
+dot(path_to_img= path_to_img, path_output=False, to_dot_with='nps',dot_id = 'all_shock_py', participant_folder = True, filter_data = False)
 

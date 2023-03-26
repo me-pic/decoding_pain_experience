@@ -8,7 +8,8 @@ from nilearn.maskers import NiftiMasker
 from nilearn.image import resample_img
 from sklearn.preprocessing import FunctionTransformer
 
-def extract_data(data_input, extract_str = 'beta*'):
+def extract_data(data_input, extract_str = 'beta*', folder_per_participant = True):
+
     '''
     Function that returns a list containing the paths of all the files in data_input, even its subfolder based
     on the filter extract_str.
@@ -17,6 +18,8 @@ def extract_data(data_input, extract_str = 'beta*'):
     ---------
     data_input : Str. ; Path to all the file data
     extract_str : Str. ; Will select only the file that satisfies the wildcard
+    folder_per_participant : Bool. ; Assume that the path to data contains a folder for each participant containing all activation maps for this participant.
+                            this is taken into account when encoding the gr, e.i. whichs maps are assign to which sub.
     '''
     path, dirs, files = next(os.walk(data_input))
     #want to return a list of all the nii file from different folders
@@ -30,8 +33,21 @@ def extract_data(data_input, extract_str = 'beta*'):
             data.append(item)
             gr.append(group_indx)#gr reflects which path or trial is associated with each participant (1 to n participants)
         group_indx += 1
+    filenames = [os.path.basename(os.path.normpath(file)) for file in data]
 
-    return data, gr
+    if folder_per_participant != True: # manualy getting gr to work
+
+        names = set([w[0:6] for w in filenames]) # get substrings of filenames to obtain e.g. 'APM_02', 'APM_05'..
+        new_gr = np.zeros(len(data), dtype = int)
+
+        for i_gr, subj_name in enumerate(names, 1):
+
+            for i_files, file in enumerate(data):
+                if subj_name in file:
+                    new_gr[i_files] = i_gr
+        gr = new_gr.tolist()
+
+    return data, gr, filenames
 
 
 def keep_sub_data(data, gr, sub_data):
@@ -45,16 +61,22 @@ def keep_sub_data(data, gr, sub_data):
     '''
     filt_data = []
     new_gr = []
-    idx = 0
-    for img in data:
-        res = [ele for ele in sub_data if (ele in img)] #checks if element 'ele' of the sub_data list is in the img's filename
-        if res:
+    if sub_data[0] == 'exception_ANAHYPER':
+        to_exclude = ['_N_']
+        for idx, img in enumerate(data):
+            res = [ele for ele in to_exclude if (ele not in img)]
+            if res:
+                filt_data.append(img)
+                new_gr.append(gr[idx])
+    else:
+        for idx, img in enumerate(data):
+            res = [ele for ele in sub_data if (ele in img)] #checks if element 'ele' of the sub_data list is in the img's filename
+            if res:
         # if res if not empty, meaning that img path contain an element in sub_data, e.g. 'ANA' or 'N_ANA'
-            filt_data.append(img)
-            new_gr.append(gr[idx])
-        idx += 1
-
-    return filt_data, new_gr
+                filt_data.append(img)
+                new_gr.append(gr[idx])
+    filenames = [os.path.basename(os.path.normpath(file)) for file in filt_data]
+    return filt_data, new_gr, filenames
 
 
 def y_transformer(y, func = np.log1p):
@@ -279,10 +301,10 @@ def train_test_iso_split(data,X, Y, train_samp, random_state = 30):
     idx = np.arange(0, X.shape[0], 1, dtype=int)
     count = 0
     for file,train_idx,test_idx in zip(data,idx,idx):
-        print(X.shape)
-        print(file)
-        print(train_idx)
-        print(test_idx)
+        #print(X.shape)
+        #print(file)
+        #print(train_idx)
+        #print(test_idx)
 
         res = [ele for ele in train_samp if (ele in file)] # Bool result of wether the file contains at least one condition from train_samp
         if res:

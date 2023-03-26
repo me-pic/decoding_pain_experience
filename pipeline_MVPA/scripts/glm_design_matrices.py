@@ -106,8 +106,8 @@ def create_DM(subject_data, timestamps, DM_name, df_mvmnt_reg, subj_name, tr, sa
     """
     print('COMPUTING design matrix under name : ' + DM_name)
 
-    fmri_time_series = concat_imgs(subject_data) #Extraction of subject'volumes (4D nii file)
-    #////////////TIMESTAMPS////////////////
+    fmri_time_series = concat_imgs(subject_data) # Extraction of subject'volumes (4D nii file)
+    # TIMESTAMPS
     if type(timestamps) is str:
 
         timestamps = pd.read_excel(timestamps, header=None)
