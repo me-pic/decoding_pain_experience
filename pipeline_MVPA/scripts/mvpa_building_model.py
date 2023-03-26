@@ -123,59 +123,35 @@ def train_test_models(X_train, Y_train, gr, n_folds, C=1.0,test_size=0.3, n_comp
     y_scores = []
     folds_names = ['fold{}'.format(i+1) for i in range(n_folds)]
     final_model_name = ['final_model'] # initialization for the metrics df colnames
-
     df_y_pred = pd.DataFrame(columns = folds_names)
-
     models = []
     model_voxel = []
     metrics_index_names = folds_names + final_model_name
-    #print(metrics_index_names)#****
     accuracy = []
     balanced_accuracy = []
     precision = []
-
+    ls_roc_auc_ovo = []
     dict_confusion = {'fold{}'.format(i+1): i for i in range(n_folds)}
     dict_classif_report = {'fold{}'.format(i+1): i for i in range(n_folds)}
     dict_decision_func = {'fold{}'.format(i+1): i for i in range(n_folds)}
 
-    ls_roc_auc_ovo = []
-
     metrics_colnames = ['accuracy', 'balanced_accuracy', 'precision'] #'confusion_matrix', 'classif_rapport']
     df_metrics = pd.DataFrame(index = (metrics_index_names), columns= metrics_colnames)
-    print(df_metrics) # good!
-        #['accuracy',
-    #'balanced_accuracy','top_k_accuracy', 'average_precision', 'f1_score',
-    #'f1_micro', 'f1_macro', 'precision_score',
-    #'precision_recall_curve', 'average_precision_score',
+    #['accuracy', 'balanced_accuracy','top_k_accuracy', 'average_precision', 'f1_score',
+    #'f1_micro', 'f1_macro', 'precision_score', 'precision_recall_curve', 'average_precision_score',
     # 'roc_auc_ovo'])
 
-    #n_components=0.80
     #Strategy to split the data
     shuffle_method = GroupShuffleSplit(n_splits = n_folds, test_size = test_size, random_state = random_seed)
     x_train, x_test, y_train, y_test = split_data(X_train, Y_train, gr, shuffle_method)
-    #print('x_train {}   //and its shape {}'.format(x_train, x_train.shape))
-    #print('x_test {}   //and its shape {}'.format(x_test, x_test.shape))
-    #print('y_train {}   //and its shape {}'.format(y_train, y_train.shape))
-    #print('y_test {}   //and its shape {}'.format(y_test, y_test.shape))
-    for i in range(len(x_train)):
-        print(x_train[i].shape)
-    for i in range(len(y_train)):
-        print(y_train[i].shape)
-    for i in range(len(x_test)):
-        print(x_test[i].shape)
-    for i in range(len(y_test)):
-        print(y_test[i].shape)
+
+    # Principal component (PC)
     PC_var_ls = []
     PC_values_ls = []
-    n_folds = 6
-    ICa = False
+    ica = False
     for i in range(n_folds):
-        n_components_pca = [0.60,0.80, 0.85, 0.90, 0.95, 1]
-        #n_components_pca = [1,1,1,1,1,1,1,1,1,1,1]
-        #C = [0.1,1,5,20,100,1,10,1,10,-10,-100]
-        #ker=['linear','linear','linear','linear','linear','rbf','rbf', 'poly','linear', 'linear','linear']
-        #gam = ['scale','scale','scale','scale','scale','scale','auto','scale',1,10,100]
-        if n_components_pca[i] <1 and ICa == False:
+
+        if n_components_pca[i] <1 and ica == False:
             print('PCA with {} components'.format(n_components_pca[i]))
             pca = PCA(n_components = n_components_pca[i])
             print(x_train[i]) # visu test
@@ -186,23 +162,15 @@ def train_test_models(X_train, Y_train, gr, n_folds, C=1.0,test_size=0.3, n_comp
             PC_var = pca.explained_variance_ratio_
             PC_var_ls.append(PC_var)
 
-        #ICA test
+        # Independent component analysis
         if ICa == True:
-
             ICA = FastICA(whiten='unit-variance')
             x_train[i] = ICA.fit_transform(x_train[i])
             x_test[i] = ICA.transform(x_test[i])
 
-        print("----------------------------")
-        print('Training model in fold{}'.format(i+1))
         model_clf = SVC(kernel='linear',gamma='auto', probability = True,class_weight=None)
         model_clf.fit(x_train[i], list(y_train[i]))
-        models.append(model_clf) # save model in a list
-        print(x_train[i].shape)
-        print(x_test[i].shape)
-        #print(x_train[i].shape, y_train[i].shape)
-        #print(x_train[i].shape)
-        #print(y_train[i].shape)
+        models.append(model_clf)
 
         # Metrics
         # y_pred
@@ -213,10 +181,8 @@ def train_test_models(X_train, Y_train, gr, n_folds, C=1.0,test_size=0.3, n_comp
         decision_func_df.append(decision_func)
         dict_decision_func['fold{}'.format(i+1)] = decision_func
 
-        # y_score
+        # Metrics using y_score
      	# ROC
-        print('type of target list y test')
-        print(type_of_target(list(y_test[i])))
         #y_test = y_test[i].astype(int)
         if binary:
             y_score = model_clf.predict_proba(x_test[i])[:, 1]
@@ -226,22 +192,29 @@ def train_test_models(X_train, Y_train, gr, n_folds, C=1.0,test_size=0.3, n_comp
             roc_auc_ovo = roc_auc_score(list(y_test[i]), np.array(y_score), multi_class = 'ovo')
 
         ls_roc_auc_ovo.append(roc_auc_ovo)
-        print('roc_auc_ovo :  {} and list of roc auc {}'.format(roc_auc_ovo,ls_roc_auc_ovo))
 
         fold_row_metrics, cm, cr = compute_metrics_y_pred(y_test[i], y_pred[i],verbose = verbose)
-        print('fold_row_metrics :  {} and its shape {}'.format(fold_row_metrics,len(fold_row_metrics)))
-
         dict_confusion['fold{}'.format(i+1)] = cm
         dict_classif_report['fold{}'.format(i+1)] = cr
-        print(cm)
+
 
         # Saving metrics in dataframe
         df_metrics.loc['fold{}'.format(i+1), metrics_colnames] = fold_row_metrics
         #model_voxel.append(model[i].inverse_transform(model[i].coef_))
+        if verbose:
+            print("----------------------------")
+            print('Training model in fold{}'.format(i+1))
+            print(cm)
+            print('roc_auc_ovo :  {} and list of roc auc {}'.format(roc_auc_ovo,ls_roc_auc_ovo))
+            print('fold_row_metrics :  {} and its shape {}'.format(fold_row_metrics,len(fold_row_metrics)))
+
+    if verbose:
+        print('x_train dim : {}'.format([x_train[i].shape for i in range( len(x_train[i])) ]))
+        print('x_test dim : {}'.format([x_test[i].shape for i in range( len(x_test[i])) ]))
+        print('y_train dim : {}'.format([y_train[i].shape for i in range( len(y_train[i])) ]))
+        print('y_test dim  : {}'.format([y_test[i].shape for i in range( len(y_test[i])) ]))
 
 
-    #df_metrics['roc_auc_ovo'] = ls_roc_auc_ovo
-    print('df_metrics post ls_roc_auc_ovo :  {} '.format(df_metrics))
     fold_results = dict(pca_n_components = n_components_pca, PC_values = PC_values_ls,PC_var = PC_var_ls, x_train = x_train, y_train = y_train, x_test = x_test, y_pred = y_pred, fold_models = models, df_fold_metrics = df_metrics,roc_auc_ovo = ls_roc_auc_ovo, confusion_matrix = dict_confusion, classification_report = dict_classif_report, decision_function = decision_func_df)
 
     #df_metrics.to_csv("dataframe_metrics.csv")

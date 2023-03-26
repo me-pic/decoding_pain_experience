@@ -15,7 +15,7 @@ from sklearn.decomposition import PCA
 from sklearn.model_selection import GroupShuffleSplit, ShuffleSplit, permutation_test_score
 
 
-def main_svc(save_path, data_input, subj_folders = True, sub_data = False,  which_train_data = False, kfold = 5, n_components_pca = 0.90, classes = ['N_HYPO', 'HYPO', 'N_HYPER', 'HYPER'], cov_corr = True, binary = False, binary_fct = 'modulation', verbose = True)
+def main_svc(save_path, data_input, subj_folders = True, sub_data = False,  which_train_data = False, kfold = 5, n_components_pca = 0.90, classes = ['N_HYPO', 'HYPO', 'N_HYPER', 'HYPER'], cov_corr = True, binary = False, binary_fct = 'modulation', verbose = True):
 
 
     """
@@ -139,7 +139,7 @@ def main_svc(save_path, data_input, subj_folders = True, sub_data = False,  whic
     Y_pred = final_model.predict(X_test)
     final_row_metrics, cm, cr = building_model.compute_metrics_y_pred(Y_test, Y_pred, verbose) # cm : confusion matrix and cr : classification report
 
-   if binary:
+    if binary:
         final_y_score = final_model.predict_proba(X_test)[:, 1] # Only  takes the second row of the output
         final_roc_auc_ovo = roc_auc_score(list(Y_test), np.array(final_y_score))
     else:
@@ -201,13 +201,12 @@ def main_svc(save_path, data_input, subj_folders = True, sub_data = False,  whic
     if verbose:
         print('check if NaN : ', np.isnan(np.min(X)), '. X SHAPE : ', X_vec.shape)
         print('final_roc_auc_ovo: {}  :'.format(final_roc_auc_ovo))
-        print('weights shape')
-        print(weights.shape)
+        print('weights shape : {} '.format(weights.shape))
 
         print('covmat_X.shape : {}, covmat_Y.shape : {}'.format(cov_x.shape,cov_y.shape))
-        print('dict. fold results : {}'.format(dict_fold_results['df_fold_metrics']))
-	print(dict_final_results)
-	print(main_args, cond_target)
+        print('Fold metrics  : {}'.format(dict_fold_results['df_fold_metrics']))
+        print(main_args, cond_target)
+
 # py maps
 #data_input = r'/home/p1226014/projects/def-rainvilp/p1226014/pain_decoding/results/glm/each_shocks'
 # SPM maps
