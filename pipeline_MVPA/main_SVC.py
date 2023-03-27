@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import pickle
+import os
 from sklearn.preprocessing import StandardScaler
 from scripts import mvpa_prepping_data as prepping_data
 from scripts import mvpa_building_model as building_model
@@ -155,7 +156,7 @@ def main_svc(save_path, data_input, subj_folders = True, sub_data = False,  whic
     contrast_counter = 1
     for weights in final_model.coef_: # W is the weight vector
 
-        (masker.inverse_transform(pca.inverse_transform(weights))).to_filename(f"coeffs_whole_brain_{contrast_counter}.nii.gz")
+        (masker.inverse_transform(pca.inverse_transform(weights))).to_filename(os.path.join(save_path, f"coeffs_whole_brain_{contrast_counter}.nii.gz"))
         if cov_corr:
             # correction from Eqn 6 (Haufe et al., 2014)
             A = np.matmul(cov_x, weights)*(1/cov_y) # j'ai enlevé weights.transpose()
@@ -163,29 +164,29 @@ def main_svc(save_path, data_input, subj_folders = True, sub_data = False,  whic
             print(A.shape)
             print(masker.inverse_transform(pca.inverse_transform(A)).shape)
             # reproject to nii
-            (masker.inverse_transform(pca.inverse_transform(A))).to_filename(f"eq6_adj_coeff_whole_brain_{contrast_counter}.nii.gz")
+            (masker.inverse_transform(pca.inverse_transform(A))).to_filename(os.path.join(save_path, f"eq6_adj_coeff_whole_brain_{contrast_counter}.nii.gz"))
         contrast_counter += 1
 
-    with open('final_results.pickle', 'wb') as handle:
+    with open(os.path.join(save_path, 'final_results.pickle'), 'wb') as handle:
         pickle.dump(dict_final_results, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    with open('final_results.pickle', 'rb') as handle:
-        b = pickle.load(handle)
+    #with open('final_results.pickle', 'rb') as handle:
+    #    b = pickle.load(handle)
 
-    filename_model = "final_model_SVC.pickle"
+    filename_model = os.path.join(save_path, "final_model_SVC.pickle")
     pickle_out = open(filename_model,"wb")
     pickle.dump(final_model, pickle_out)
     pickle_out.close()
 
     if kfold > 0:
-        with open('kfold_results.pickle', 'wb') as handle:
+        with open(os.path.join(save_path, 'kfold_results.pickle'), 'wb') as handle:
             pickle.dump(dict_fold_results, handle, protocol=pickle.HIGHEST_PROTOCOL)
-        with open('kfold_results.pickle', 'rb') as handle:
-            b = pickle.load(handle)
+        #with open('kfold_results.pickle', 'rb') as handle:
+        #    b = pickle.load(handle)
 
-    np.savez_compressed('XY_data_split.npz',df_target = df_target, X_train = X_train, Y_train = Y_train, X_test = X_test, Y_test = Y_test)
+    np.savez_compressed(os.path.join(save_path, 'XY_data_split.npz'),df_target = df_target, X_train = X_train, Y_train = Y_train, X_test = X_test, Y_test = Y_test)
     #np.savez_compressed('cov_matrix.npz', cov_mat=cov_mat)
     main_args = f'kfold = {kfold}, n_components_pca  = {n_components_pca}, sub_data = {sub_data}, which_train_data = {which_train_data}, classes = {classes}, cov_corr = {cov_corr}, binary = {binary}, binary_fct = {binary_fct}'
-    with open('main_args.txt', 'w') as main_args_file:
+    with open(os.path.join(save_path, 'main_args.txt'), 'w') as main_args_file:
         main_args_file.write(''.join(cond_target) + ' / ' + main_args)
 
     if verbose:
