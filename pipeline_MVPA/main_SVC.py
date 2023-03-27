@@ -10,7 +10,7 @@ from sklearn.decomposition import PCA
 from sklearn.model_selection import GroupShuffleSplit
 
 
-def main_svc(data_input, subj_folders = True, sub_data = False,  which_train_data = False, kfold = 5, n_components_pca = 0.90, classes = ['N_HYPO', 'HYPO', 'N_HYPER', 'HYPER'], cov_corr = True, binary = False, binary_fct = 'modulation', verbose = True):
+def main_svc(save_path, data_input, subj_folders = True, sub_data = False,  which_train_data = False, kfold = 5, n_components_pca = 0.90, classes = ['N_HYPO', 'HYPO', 'N_HYPER', 'HYPER'], cov_corr = True, binary = False, binary_fct = 'modulation', verbose = True):
 
 
     """
