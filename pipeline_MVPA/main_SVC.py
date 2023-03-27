@@ -15,7 +15,7 @@ from sklearn.decomposition import PCA
 from sklearn.model_selection import GroupShuffleSplit, ShuffleSplit, permutation_test_score
 
 
-def main_svc(save_path, data_input, subj_folders = True, sub_data = False,  which_train_data = False, kfold = 5, n_components_pca = 0.90, classes = ['N_HYPO', 'HYPO', 'N_HYPER', 'HYPER'], cov_corr = True, binary = False, binary_fct = 'modulation', verbose = True):
+def main_svc(save_path, data_input, subj_folders = True, sub_data = False, kfold = 5, n_components_pca = 0.90, classes = ['N_HYPO', 'HYPO', 'N_HYPER', 'HYPER'], cov_corr = True, binary = False, binary_fct = 'modulation', verbose = True):
 
 
     """
@@ -33,10 +33,6 @@ def main_svc(save_path, data_input, subj_folders = True, sub_data = False,  whic
     sub_data :  Bool or string; By default, the model is built with all the data (sub_data = False), but list of string can be given to select only a sample of data to build model.
                 E.g. sub_data = ['cond1', 'cond2'], only the data filename containing 'cond1' and 'cond2 will included in the model (train and test). If = 'exception_ANAHYPER'
 
-    which_train_data : Bool or string; By default, all the data is used to train/test the model (= False), but if a list of string is specified, the data having those strings in
-                        their name will be selected to train the model and the rest of the data will be used to test the model. If which_train_data != False, binary = True automatically
-                        E.g. which_train_data = ['cond1', 'cond2'], training is done with those conditions and the model is tested on 'cond3' and 'cond4'
-                        *if which_train_data != False, be aware of the binary_fct
 
     kfold : Int.; Number of folds to perform on the test set. If kfold = 0, kfold-cross-validation will be skipped. Default = 5
 
@@ -63,16 +59,8 @@ def main_svc(save_path, data_input, subj_folders = True, sub_data = False,  whic
 
     # Y data
     # Endodes target binary or multiclass. binary_fct may change according to model.
-    if binary or which_train_data != False: # controls for the case binary = True,
-			                    # and which_train_data = ['c1', 'c2'] so you don't want to encode Y as binary
-        if binary_fct == 'modulation':
-            df_target, cond_target  = prepping_data.encode_manip_classes(data, gr) # ['filename', 'target', 'condition', 'group'] as col
-
-        elif binary_fct == 'runs':
-            df_target, cond_target = prepping_data.encode_runs_as_classes(data, gr)
-
-        binary = True # if which_train_data != False and binary = False : to make sure model is binary
-
+    if binary != False: # controls for the case binary = True
+        df_target, cond_target  = prepping_data.encode_manip_classes(data, gr) # ['filename', 'target', 'condition', 'group'] as col
     else: # regular multiclass case otherwise
         df_target, cond_target = prepping_data.encode_classes(data, gr)
     Y = np.array(df_target['target'])
@@ -89,7 +77,7 @@ def main_svc(save_path, data_input, subj_folders = True, sub_data = False,  whic
     X = XYgr_ordered.iloc[:,:-3].to_numpy() # X part of XYgr
     Y = np.array(XYgr_ordered['Y'])
     gr = np.array(XYgr_ordered['gr'])
-    data = XY_ordered['files'] # 'data' is a list of filenames instead of paths** To  reuse paths, change 'files' to 'path' column of XYgr
+    data = XYgr_ordered['files'] # 'data' is a list of filenames instead of paths** To  reuse paths, change 'files' to 'path' column of XYgr
 
     # Saving test for matlab script
     save_test = False
@@ -105,27 +93,15 @@ def main_svc(save_path, data_input, subj_folders = True, sub_data = False,  whic
         pca = PCA(n_components = n_components_pca)
 
     # Split
-    if which_train_data != False: # if = ['c1', 'c2'] these cond will be used for training
-        X_train, X_test, Y_train, Y_test, y_train_gr_idx = prepping_data.train_test_iso_split(data,X,Y, which_train_data)
-        split_gr = [gr[ele] for ele in y_train_gr_idx] # previoulsy : gr[:len(Y_train)
-        binary = True                                  # split the group vector according to the split applied to X and Y
-    else:
-        #GroupShuffleSplit for train / validation set
-        gss = GroupShuffleSplit(n_splits=1, test_size=0.20, random_state=30)
-        train_index, test_index = next(gss.split(X, Y, gr))
-
-        X_train, X_test = X[train_index], X[test_index]
-        Y_train, Y_test = Y[train_index], Y[test_index]
-        gr_train = (np.array(gr)[train_index]).tolist()
-        split_gr = gr_train
-        # Previous method
-        #ss = ShuffleSplit(n_splits=1, test_size=0.30, random_state=30)
-        #X_train, X_test, Y_train, Y_test = train_test_split(X,Y,shuffle = False, test_size=0.30, random_state=30) #old precedure
-        #gr[:len(Y_train)]
+    #GroupShuffleSplit for train / validation set
+    gss = GroupShuffleSplit(n_splits=1, test_size=0.20, random_state=30)
+    train_index, test_index = next(gss.split(X, Y, gr))
+    X_train, X_test = X[train_index], X[test_index]
+    Y_train, Y_test = Y[train_index], Y[test_index]
+    gr_train = (np.array(gr)[train_index]).tolist()
 
     #K_FOLD models on (1 - test_size)% train set
-    if kfold > 0:
-        dict_fold_results = building_model.train_test_models(X_train,Y_train, split_gr, kfold, binary = binary, verbose = verbose)
+    dict_fold_results = building_model.train_test_models(X_train,Y_train, gr_train, kfold, binary = binary, verbose = verbose)
 
     # Final model
     model_clf = SVC(kernel="linear", probability = True, decision_function_shape = 'ovo')
@@ -158,10 +134,7 @@ def main_svc(save_path, data_input, subj_folders = True, sub_data = False,  whic
     if cov_corr:
         cov_x = np.cov(X_test.transpose().astype(np.float64))
         cov_y = np.cov(Y_test.transpose().astype(np.float64))
-        #cov_mat = np.cov(X_test.transpose().astype(float),wide_Y_test.transpose().astype(float), rowvar = False, dtype = np.float64)
 
-    # saving coeff., dict_final_results, final_model and fold_results
-    #os.chdir(save_path)
     contrast_counter = 1
     for weights in final_model.coef_: # W is the weight vector
 
@@ -213,6 +186,5 @@ def main_svc(save_path, data_input, subj_folders = True, sub_data = False,  whic
 data_input = r'/home/p1226014/projects/def-rainvilp/p1226014/pain_decoding/results/glm/contrast_singEvent_SPM'
 save_out = r'/home/p1226014/projects/def-rainvilp/p1226014/pain_decoding/results/mvpa '
 
-main_svc(save_out, data_input, subj_folders=False, sub_data = ['exception_ANAHYPER'], which_train_data = False, kfold = 6, n_components_pca = .90, binary = True, binary_fct = 'runs')
+main_svc(save_out, data_input, subj_folders=False, sub_data = ['exception_ANAHYPER'], kfold = 6, n_components_pca = .90, binary = True)
 
-#  which_train_data = ['oANA', 'oHYPER'] to train on hyper-hypo and test on rest
